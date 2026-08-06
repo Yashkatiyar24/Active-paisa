@@ -464,20 +464,13 @@
             <p class="error" id="income-err" role="alert"></p>
           </div>
 
-          <fieldset class="field">
-            <legend>Annual household income</legend>
-            <div class="choice-row" role="radiogroup" aria-describedby="household-err">
-              <label class="choice">
-                <input type="radio" name="household" value="More than ₹3L" required>
-                <span class="choice-face"><span class="choice-label">More than &#8377;3L</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="household" value="Less than ₹3L">
-                <span class="choice-face"><span class="choice-label">Less than &#8377;3L</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-            </div>
+          <div class="field outlined has-rupee">
+            <label for="household">Annual Household Income*</label>
+            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
+            <input id="household" name="household" type="text" inputmode="numeric"
+                   aria-describedby="household-err" required>
             <p class="error" id="household-err" role="alert"></p>
-          </fieldset>
+          </div>
 
         </div>
 

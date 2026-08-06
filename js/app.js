@@ -152,9 +152,17 @@
     },
 
     household: function (input) {
-      if (!$('input[name="household"]:checked')) {
-        return setError(input, 'Please select your annual household income.');
+      var v = digitsOnly(input.value);
+      if (!v) return setError(input, 'Please enter your annual household income.');
+      var n = parseInt(v, 10);
+      if (n < RULES.minHouseholdIncome) {
+        return setError(input, 'Minimum annual household income is ' + money(RULES.minHouseholdIncome) + '.');
       }
+      var monthly = parseInt(digitsOnly($('#income').value) || '0', 10);
+      if (monthly && n < monthly * 12) {
+        return setError(input, 'Household income cannot be less than your own annual income.');
+      }
+      if (n > 1000000000) return setError(input, 'Please enter a realistic household income.');
       return clearError(input);
     },
 
@@ -358,6 +366,7 @@
      ========================================================================== */
   var formEmployment = $('#formEmployment');
   maskMoney($('#income'));
+  maskMoney($('#household'));
   bindLiveValidation(formEmployment);
 
   // Self-employed applicants name a business, not an employer.
@@ -376,8 +385,7 @@
     state.data.employment = picked ? picked.value : '';
     state.data.company = $('#company').value.trim();
     state.data.income = parseInt(digitsOnly($('#income').value), 10);
-    var band = $('input[name="household"]:checked');
-    state.data.household = band ? band.value : '';
+    state.data.household = parseInt(digitsOnly($('#household').value), 10);
 
     withLoading($('button[type="submit"]', formEmployment), TIMING.submitDelay, function () {
       // TODO: POST the completed application here.

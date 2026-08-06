@@ -209,11 +209,19 @@
 
         submit(doc, '#formEmployment');
         await wait(60);
-        ok(doc.querySelector('input[name="household"]').closest('.field').classList.contains('has-error'),
-           'requires an annual household income band');
-        ok(visibleStep(doc) === 3, 'does not advance without the household band');
+        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
+           'requires an annual household income');
+        ok(visibleStep(doc) === 3, 'does not advance without household income');
 
-        pick(doc, 'household', 'More than \u20B93L');
+        type(doc, '#household', '200000');
+        ok(doc.querySelector('#household').value === '2,00,000',
+           'formats household income with Indian digit grouping');
+        submit(doc, '#formEmployment');
+        await wait(60);
+        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
+           'rejects household income below the applicant\u2019s own annual income');
+
+        type(doc, '#household', '5000000');
         submit(doc, '#formEmployment');
         await wait(60);
         ok(doc.querySelector('#declResident').closest('.field').classList.contains('has-error'),
