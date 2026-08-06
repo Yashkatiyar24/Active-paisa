@@ -272,209 +272,269 @@
   </div>
 </footer>
 
-<!-- ============ APPLICATION MODAL ============ -->
-<dialog class="apply-modal" id="applyModal" aria-labelledby="applyModalTitle">
-  <div class="modal-head">
-    <h2 class="sr-only" id="applyModalTitle">Personal loan application</h2>
-    <img src="assets/brand/logo-640.png" width="640" height="142" alt="Activ Paisa" class="modal-logo">
-    <button class="modal-close" type="button" id="modalClose" aria-label="Close application">
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
-  </div>
+<!-- ============ APPLICATION VIEW (full page) ============ -->
+<section class="apply-view" id="applyView" aria-labelledby="applyViewTitle" hidden>
+  <header class="apply-header">
+    <div class="container apply-header-inner">
+      <a class="brand" href="/" aria-label="Activ Paisa — home">
+        <img src="assets/brand/logo-640.png" width="640" height="142" alt="Activ Paisa" class="brand-logo">
+      </a>
+      <button class="apply-exit" type="button" id="applyExit" aria-label="Leave the application">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
 
-  <div class="apply-card" id="applyCard">
+  <h1 class="sr-only" id="applyViewTitle">Personal loan application</h1>
 
-    <div class="progress" id="progress" hidden>
-      <div class="progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="5"
-           aria-valuenow="1" aria-label="Application progress" id="progressBar">
-        <span class="progress-fill" id="progressFill"></span>
-      </div>
-      <ol class="progress-steps" id="progressSteps"></ol>
+  <div class="apply-body container" id="applyCard">
+
+    <!-- 3-node stepper: Basic Details / Income Details / Approved Offer -->
+    <div class="stepper-shell" id="stepper" hidden>
+      <ol class="stepper" id="stepperList" role="list"></ol>
     </div>
 
     <!-- Step 1 — Mobile -->
-    <section class="step" data-step="0" aria-labelledby="s0h">
-      <h3 class="step-title" id="s0h">Check your eligibility</h3>
-      <p class="step-sub">Enter your mobile number to see offers you qualify for.</p>
+    <section class="step step-narrow" data-step="0" aria-labelledby="s0h">
+      <div class="capture-card">
+        <h2 class="capture-title" id="s0h">Apply and Get Cash Instantly</h2>
 
-      <form id="formMobile" novalidate>
-        <div class="field">
-          <label for="mobile">Mobile number</label>
-          <div class="input-wrap has-prefix">
-            <span class="prefix" aria-hidden="true">+91</span>
-            <input id="mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel-national"
-                   maxlength="10" placeholder="10-digit mobile number"
-                   aria-describedby="mobile-err" required>
+        <form id="formMobile" novalidate>
+          <div class="capture-inner">
+            <div class="field">
+              <label for="mobile" class="sr-only">Mobile number</label>
+              <div class="input-wrap has-prefix">
+                <span class="prefix" aria-hidden="true">+91</span>
+                <input id="mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel-national"
+                       maxlength="10" placeholder="Enter Mobile number*"
+                       aria-describedby="mobile-err" required>
+              </div>
+              <p class="error" id="mobile-err" role="alert"></p>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Apply Now</button>
           </div>
-          <p class="error" id="mobile-err" role="alert"></p>
-        </div>
 
-        <div class="field consent">
-          <input type="checkbox" id="consent" name="consent" aria-describedby="consent-err" required>
-          <label for="consent">
-            I agree to the <a href="#terms">Terms &amp; Conditions</a> and
-            <a href="#privacy">Privacy Policy</a>, and consent to be contacted about my application.
-          </label>
-          <p class="error" id="consent-err" role="alert"></p>
-        </div>
+          <!-- consent lives inside the form so validateForm() actually sees it -->
+          <div class="field consent-row">
+            <input type="checkbox" id="consent" name="consent" class="tick-box"
+                   aria-describedby="consent-err" required>
+            <label for="consent">
+              By continuing, I agree to the <a href="#privacy">Privacy Policy</a> and
+              <a href="#terms">Terms and Conditions</a> of Activ Paisa and its
+              <a href="#partners">Lending Partners</a>. I authorise Activ Paisa and its Lending
+              Partners to collect, store and verify my credit report from credit bureaus and to
+              contact me via SMS, e-mail and WhatsApp. I confirm that my preferred language of
+              communication is English.
+            </label>
+            <p class="error" id="consent-err" role="alert"></p>
+          </div>
+        </form>
+      </div>
 
-        <button class="btn btn-primary btn-block" type="submit">Apply Now</button>
-        <p class="fineprint">Checking your offers will not affect your credit score.</p>
-      </form>
+      <p class="fineprint">Checking your offers will not affect your credit score.</p>
     </section>
 
-    <!-- Step 2 — Basic details -->
-    <section class="step" data-step="1" aria-labelledby="s1h" hidden>
-      <h3 class="step-title" id="s1h">Basic details</h3>
-      <p class="step-sub">Tell us a little about yourself.</p>
+    <!-- Step 2 — OTP -->
+    <section class="step step-narrow" data-step="1" aria-labelledby="s1h" hidden>
+      <div class="capture-card">
+        <h2 class="capture-title" id="s1h">Verify your mobile number</h2>
+        <p class="capture-sub">
+          Enter the 6-digit code sent to <strong id="otpTarget">your mobile</strong>.
+          <button type="button" class="linklike" data-goto="0">Change</button>
+        </p>
+
+        <form id="formOtp" novalidate>
+          <div class="field">
+            <label for="otp-0" class="sr-only">Enter the 6 digit verification code</label>
+            <div class="otp-inputs" id="otpInputs" aria-describedby="otp-err">
+              <input id="otp-0" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
+              <input id="otp-1" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
+              <input id="otp-2" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
+              <input id="otp-3" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
+              <input id="otp-4" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5">
+              <input id="otp-5" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6">
+            </div>
+            <p class="error" id="otp-err" role="alert"></p>
+          </div>
+
+          <p class="resend">
+            <button type="button" class="linklike" id="resendBtn" disabled>Resend OTP</button>
+            <span id="resendTimer" aria-live="polite"></span>
+          </p>
+
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Verify OTP</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Step 3 — Basic details -->
+    <section class="step" data-step="2" aria-labelledby="s2h" hidden>
+      <h2 class="form-title" id="s2h">Please verify details for the best loan offer</h2>
 
       <form id="formBasic" novalidate>
-        <fieldset class="field">
-          <legend>Gender</legend>
-          <div class="segmented" role="radiogroup" aria-describedby="gender-err">
-            <label><input type="radio" name="gender" value="Male" required><span>Male</span></label>
-            <label><input type="radio" name="gender" value="Female"><span>Female</span></label>
-            <label><input type="radio" name="gender" value="Other"><span>Other</span></label>
+        <div class="form-grid">
+
+          <fieldset class="field span-2-left">
+            <legend>Select your Gender</legend>
+            <div class="choice-row" role="radiogroup" aria-describedby="gender-err">
+              <label class="choice">
+                <input type="radio" name="gender" value="Male" required>
+                <span class="choice-face"><span class="choice-label">Male</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="gender" value="Female">
+                <span class="choice-face"><span class="choice-label">Female</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+            </div>
+            <p class="error" id="gender-err" role="alert"></p>
+          </fieldset>
+
+          <div class="field outlined">
+            <label for="email">Email Address*</label>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email"
+                   aria-describedby="email-err" required>
+            <p class="error" id="email-err" role="alert"></p>
           </div>
-          <p class="error" id="gender-err" role="alert"></p>
-        </fieldset>
 
-        <div class="field">
-          <label for="dob">Date of birth</label>
-          <input id="dob" name="dob" type="date" autocomplete="bday" aria-describedby="dob-err" required>
-          <p class="error" id="dob-err" role="alert"></p>
-        </div>
+          <div class="field outlined">
+            <label for="dob">DOB (DD/MM/YYYY)*</label>
+            <input id="dob" name="dob" type="date" autocomplete="bday" aria-describedby="dob-err" required>
+            <p class="error" id="dob-err" role="alert"></p>
+          </div>
 
-        <div class="field">
-          <label for="email">Email address</label>
-          <input id="email" name="email" type="email" autocomplete="email" inputmode="email"
-                 placeholder="you@example.com" aria-describedby="email-err" required>
-          <p class="error" id="email-err" role="alert"></p>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="pincode">Pincode</label>
+          <div class="field outlined">
+            <label for="pincode">Pincode*</label>
             <input id="pincode" name="pincode" type="text" inputmode="numeric" autocomplete="postal-code"
-                   maxlength="6" placeholder="560001" aria-describedby="pincode-err" required>
+                   maxlength="6" aria-describedby="pincode-err" required>
             <p class="error" id="pincode-err" role="alert"></p>
           </div>
-          <div class="field">
-            <label for="pan">PAN</label>
+
+          <div class="field outlined">
+            <label for="pan">PAN*</label>
             <input id="pan" name="pan" type="text" maxlength="10" placeholder="ABCDE1234F"
                    autocapitalize="characters" spellcheck="false" aria-describedby="pan-err" required>
             <p class="error" id="pan-err" role="alert"></p>
           </div>
+
         </div>
 
-        <div class="actions">
-          <button class="btn btn-ghost" type="button" data-back>Back</button>
-          <button class="btn btn-primary btn-grow" type="submit">Proceed</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Step 3 — Employment -->
-    <section class="step" data-step="2" aria-labelledby="s2h" hidden>
-      <h3 class="step-title" id="s2h">Income details</h3>
-      <p class="step-sub">This helps us match you with the right offers.</p>
-
-      <form id="formEmployment" novalidate>
-        <fieldset class="field">
-          <legend>Employment type</legend>
-          <div class="segmented" role="radiogroup" aria-describedby="employment-err">
-            <label><input type="radio" name="employment" value="Salaried" required><span>Salaried</span></label>
-            <label><input type="radio" name="employment" value="Self Employed"><span>Self Employed</span></label>
-          </div>
-          <p class="error" id="employment-err" role="alert"></p>
-        </fieldset>
-
-        <div class="field">
-          <label for="company" id="companyLabel">Company name</label>
-          <input id="company" name="company" type="text" autocomplete="organization" maxlength="80"
-                 placeholder="Where do you work?" aria-describedby="company-err" required>
-          <p class="error" id="company-err" role="alert"></p>
-        </div>
-
-        <div class="field">
-          <label for="income">Monthly income</label>
-          <div class="input-wrap has-prefix">
-            <span class="prefix" aria-hidden="true">&#8377;</span>
-            <input id="income" name="income" type="text" inputmode="numeric" placeholder="50,000"
-                   aria-describedby="income-err" required>
-          </div>
-          <p class="error" id="income-err" role="alert"></p>
-        </div>
-
-        <div class="field">
-          <label for="household">Annual household income</label>
-          <div class="input-wrap has-prefix">
-            <span class="prefix" aria-hidden="true">&#8377;</span>
-            <input id="household" name="household" type="text" inputmode="numeric" placeholder="12,00,000"
-                   aria-describedby="household-err" required>
-          </div>
-          <p class="error" id="household-err" role="alert"></p>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-ghost" type="button" data-back>Back</button>
-          <button class="btn btn-primary btn-grow" type="submit">Get Offer Now</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Step 4 — OTP -->
-    <section class="step" data-step="3" aria-labelledby="s3h" hidden>
-      <h3 class="step-title" id="s3h">Verify your number</h3>
-      <p class="step-sub">We sent a 6-digit code to <strong id="otpTarget">your mobile</strong>.
-        <button type="button" class="linklike" data-goto="0">Change</button>
-      </p>
-
-      <form id="formOtp" novalidate>
-        <div class="field">
-          <label for="otp-0" class="sr-only">Enter the 6 digit verification code</label>
-          <div class="otp-inputs" id="otpInputs" aria-describedby="otp-err">
-            <input id="otp-0" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
-            <input id="otp-1" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
-            <input id="otp-2" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
-            <input id="otp-3" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
-            <input id="otp-4" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5">
-            <input id="otp-5" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6">
-          </div>
-          <p class="error" id="otp-err" role="alert"></p>
-        </div>
-
-        <p class="resend">
-          <button type="button" class="linklike" id="resendBtn" disabled>Resend OTP</button>
-          <span id="resendTimer" aria-live="polite"></span>
+        <p class="verify-note">
+          <span class="note-icon" aria-hidden="true">?</span>
+          Please verify your details for accurate submission.
         </p>
 
-        <div class="actions">
+        <div class="actions actions-center">
           <button class="btn btn-ghost" type="button" data-back>Back</button>
-          <button class="btn btn-primary btn-grow" type="submit">Verify OTP</button>
+          <button class="btn btn-primary btn-wide" type="submit">Proceed</button>
         </div>
       </form>
     </section>
 
-    <!-- Step 5 — Offers -->
+    <!-- Step 4 — Income details -->
+    <section class="step" data-step="3" aria-labelledby="s3h" hidden>
+      <h2 class="sr-only" id="s3h">Income details</h2>
+
+      <form id="formEmployment" novalidate>
+        <div class="form-grid">
+
+          <fieldset class="field span-2-left">
+            <legend>Select your Employment Type</legend>
+            <div class="choice-row" role="radiogroup" aria-describedby="employment-err">
+              <label class="choice">
+                <input type="radio" name="employment" value="Salaried" required>
+                <span class="choice-face"><span class="choice-label">Salaried</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="employment" value="Self-employed">
+                <span class="choice-face"><span class="choice-label">Self-employed</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+            </div>
+            <p class="error" id="employment-err" role="alert"></p>
+          </fieldset>
+
+          <div class="field outlined">
+            <label for="company" id="companyLabel">Company Name*</label>
+            <input id="company" name="company" type="text" autocomplete="organization" maxlength="80"
+                   aria-describedby="company-err" required>
+            <p class="error" id="company-err" role="alert"></p>
+          </div>
+
+          <div class="field outlined has-rupee">
+            <label for="income">Monthly Income*</label>
+            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
+            <input id="income" name="income" type="text" inputmode="numeric"
+                   aria-describedby="income-err" required>
+            <p class="error" id="income-err" role="alert"></p>
+          </div>
+
+          <fieldset class="field">
+            <legend>Annual Household Income</legend>
+            <div class="choice-row" role="radiogroup" aria-describedby="household-err">
+              <label class="choice">
+                <input type="radio" name="household" value="More than ₹3L" required>
+                <span class="choice-face"><span class="choice-label">More than &#8377;3L</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="household" value="Less than ₹3L">
+                <span class="choice-face"><span class="choice-label">Less than &#8377;3L</span><span class="choice-dot" aria-hidden="true"></span></span>
+              </label>
+            </div>
+            <p class="error" id="household-err" role="alert"></p>
+          </fieldset>
+
+        </div>
+
+        <div class="actions actions-center">
+          <button class="btn btn-ghost" type="button" data-back>Back</button>
+          <button class="btn btn-primary btn-wide" type="submit">Get Offer Now</button>
+        </div>
+
+        <div class="declarations">
+          <div class="field consent-row">
+            <input type="checkbox" id="declResident" name="declResident" class="tick-box"
+                   aria-describedby="declResident-err" required>
+            <label for="declResident">
+              I agree to the <a href="#privacy">Privacy Policy</a> and
+              <a href="#terms">Terms and Conditions</a> of Activ Paisa and its
+              <a href="#partners">Partners</a>, and I confirm that I am a resident of India and
+              am not a politically exposed person.
+            </label>
+            <p class="error" id="declResident-err" role="alert"></p>
+          </div>
+
+          <div class="field consent-row">
+            <input type="checkbox" id="declIndustry" name="declIndustry" class="tick-box"
+                   aria-describedby="declIndustry-err" required>
+            <label for="declIndustry">
+              I confirm that my work does not belong to any of the
+              <a href="#terms">restricted industries</a>, nor is my work profile listed there.
+            </label>
+            <p class="error" id="declIndustry-err" role="alert"></p>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Step 5 — Approved offer -->
     <section class="step" data-step="4" aria-labelledby="s4h" hidden>
-      <h3 class="step-title" id="s4h">Your approved offers</h3>
-      <p class="step-sub" id="offersSub">Select an offer to continue.</p>
+      <h2 class="form-title" id="s4h">Your approved offers</h2>
+      <p class="form-sub" id="offersSub">Select an offer to continue.</p>
       <div class="offers" id="offers" aria-live="polite"></div>
     </section>
 
     <!-- Success -->
-    <section class="step step-success" data-step="5" aria-labelledby="s5h" hidden>
+    <section class="step step-narrow step-success" data-step="5" aria-labelledby="s5h" hidden>
       <div class="success-mark" aria-hidden="true">
         <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-16"/></svg>
       </div>
-      <h3 class="step-title" id="s5h">Application submitted</h3>
-      <p class="step-sub" id="successSub"></p>
+      <h2 class="form-title" id="s5h">Application submitted</h2>
+      <p class="form-sub" id="successSub"></p>
       <button class="btn btn-ghost btn-block" type="button" id="restartBtn">Start a new application</button>
     </section>
 
   </div>
-</dialog>
+</section>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 

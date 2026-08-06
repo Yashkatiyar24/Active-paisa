@@ -152,16 +152,19 @@
     },
 
     household: function (input) {
-      var v = digitsOnly(input.value);
-      if (!v) return setError(input, 'Please enter your annual household income.');
-      var n = parseInt(v, 10);
-      if (n < RULES.minHouseholdIncome) {
-        return setError(input, 'Minimum annual household income is ' + money(RULES.minHouseholdIncome) + '.');
+      if (!$('input[name="household"]:checked')) {
+        return setError(input, 'Please select your annual household income.');
       }
-      var monthly = parseInt(digitsOnly($('#income').value) || '0', 10);
-      if (monthly && n < monthly * 12) {
-        return setError(input, 'Household income cannot be less than your own annual income.');
-      }
+      return clearError(input);
+    },
+
+    declResident: function (input) {
+      if (!input.checked) return setError(input, 'Please confirm this declaration to continue.');
+      return clearError(input);
+    },
+
+    declIndustry: function (input) {
+      if (!input.checked) return setError(input, 'Please confirm this declaration to continue.');
       return clearError(input);
     }
   };
@@ -222,26 +225,46 @@
   /* ==========================================================================
      Step navigation
      ========================================================================== */
-  var progressWrap = $('#progress');
-  var progressFill = $('#progressFill');
-  var progressBar = $('#progressBar');
-  var progressSteps = $('#progressSteps');
+  var stepperShell = $('#stepper');
+  var stepperList = $('#stepperList');
 
-  AP.STEPS.forEach(function (label) { progressSteps.appendChild(el('li', null, label)); });
+  var SVG_NS = 'http://www.w3.org/2000/svg';
 
-  function renderProgress() {
-    var i = state.step;
-    var showing = i >= STEP.BASIC && i <= STEP.OFFERS;
-    progressWrap.hidden = !showing;
+  function checkMark() {
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', 'M5 12.5l4.5 4.5L19 7.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', '#fff');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    return svg;
+  }
+
+  AP.STEPPER.forEach(function (label) {
+    var li = el('li');
+    var node = el('span', 'node');
+    node.appendChild(checkMark());
+    li.appendChild(node);
+    li.appendChild(el('span', null, label));
+    stepperList.appendChild(li);
+  });
+
+  function renderStepper() {
+    var node = AP.STEPPER_NODE[state.step];
+    var showing = node !== undefined;
+    stepperShell.hidden = !showing;
     if (!showing) return;
 
-    progressFill.style.width = ((i + 1) / AP.STEPS.length * 100) + '%';
-    progressBar.setAttribute('aria-valuenow', String(i + 1));
-    progressBar.setAttribute('aria-valuetext', AP.STEPS[i] + ', step ' + (i + 1) + ' of ' + AP.STEPS.length);
-
-    $$('li', progressSteps).forEach(function (li, idx) {
-      li.classList.toggle('is-done', idx < i);
-      li.classList.toggle('is-current', idx === i);
+    $$('li', stepperList).forEach(function (li, idx) {
+      li.classList.toggle('is-done', idx < node);
+      li.classList.toggle('is-current', idx === node);
+      if (idx === node) li.setAttribute('aria-current', 'step');
+      else li.removeAttribute('aria-current');
     });
   }
 
@@ -250,13 +273,14 @@
     $$('.step', $('#applyCard')).forEach(function (section) {
       section.hidden = Number(section.dataset.step) !== step;
     });
-    renderProgress();
+    renderStepper();
 
     var active = $('.step[data-step="' + step + '"]');
-    var focusable = active && $('input:not([type="hidden"]), button', active);
+    // prefer the first real input over any inline button (e.g. OTP's "Change")
+    var focusable = active && ($('input:not([type="hidden"])', active) || $('button', active));
     if (focusable) focusable.focus({ preventScroll: true });
 
-    $('#applyCard').scrollTop = 0;
+    window.scrollTo(0, 0);
   }
 
   /* Async submit with a loading state on the button. */
@@ -286,7 +310,9 @@
 
     state.data.mobile = digitsOnly($('#mobile').value);
     withLoading($('button[type="submit"]', formMobile), TIMING.submitDelay, function () {
-      goTo(STEP.BASIC);
+      // TODO: ask the backend to send the real OTP here.
+      goTo(STEP.OTP);
+      startOtp();
     });
   });
 
@@ -332,15 +358,13 @@
      ========================================================================== */
   var formEmployment = $('#formEmployment');
   maskMoney($('#income'));
-  maskMoney($('#household'));
   bindLiveValidation(formEmployment);
 
   // Self-employed applicants name a business, not an employer.
   $$('input[name="employment"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
-      var self = radio.value === 'Self Employed' && radio.checked;
-      $('#companyLabel').textContent = self ? 'Business name' : 'Company name';
-      $('#company').placeholder = self ? 'What is your business called?' : 'Where do you work?';
+      var self = radio.value === 'Self-employed' && radio.checked;
+      $('#companyLabel').textContent = self ? 'Business Name*' : 'Company Name*';
     });
   });
 
@@ -352,12 +376,13 @@
     state.data.employment = picked ? picked.value : '';
     state.data.company = $('#company').value.trim();
     state.data.income = parseInt(digitsOnly($('#income').value), 10);
-    state.data.household = parseInt(digitsOnly($('#household').value), 10);
+    var band = $('input[name="household"]:checked');
+    state.data.household = band ? band.value : '';
 
     withLoading($('button[type="submit"]', formEmployment), TIMING.submitDelay, function () {
-      // TODO: POST the application here and have the backend trigger the real OTP.
-      goTo(STEP.OTP);
-      startOtp();
+      // TODO: POST the completed application here.
+      goTo(STEP.OFFERS);
+      loadOffers();
     });
   });
 
@@ -442,8 +467,7 @@
     withLoading($('button[type="submit"]', formOtp), TIMING.submitDelay, function () {
       clearInterval(state.resendId);
       toast('Mobile number verified.', 'success');
-      goTo(STEP.OFFERS);
-      loadOffers();
+      goTo(STEP.BASIC);
     });
   });
 
@@ -559,14 +583,22 @@
   });
 
   /* ==========================================================================
-     Application modal
+     Application view — a full-page takeover of the landing page
      ========================================================================== */
-  var modal = $('#applyModal');
+  var applyView = $('#applyView');
+  var landingParts = [$('.site-header'), $('#main'), $('.site-footer')];
+
+  function showApply(on) {
+    landingParts.forEach(function (node) { node.hidden = on; });
+    applyView.hidden = !on;
+    document.body.classList.toggle('is-applying', on);
+    window.scrollTo(0, 0);
+  }
 
   function openApply() {
-    if (!modal.open) modal.showModal();
+    showApply(true);
     var active = $('.step[data-step="' + state.step + '"]');
-    var focusable = active && $('input:not([type="hidden"]), button', active);
+    var focusable = active && ($('input:not([type="hidden"])', active) || $('button', active));
     if (focusable) focusable.focus({ preventScroll: true });
   }
 
@@ -574,11 +606,9 @@
     btn.addEventListener('click', openApply);
   });
 
-  $('#modalClose').addEventListener('click', function () { modal.close(); });
-
-  // Click outside the panel closes it — <dialog> gives us Esc and focus trapping free.
-  modal.addEventListener('click', function (e) {
-    if (e.target === modal) modal.close();
+  $('#applyExit').addEventListener('click', function () {
+    showApply(false);
+    if (location.hash === '#apply') location.hash = '';
   });
 
   // Deep link: /#apply opens the flow directly.
@@ -713,5 +743,5 @@
 
   $('#year').textContent = String(new Date().getFullYear());
 
-  renderProgress();
+  renderStepper();
 })(AP);

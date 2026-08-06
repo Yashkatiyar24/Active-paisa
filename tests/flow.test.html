@@ -90,14 +90,15 @@
            'renders 3 review cards');
         ok(doc.querySelectorAll('.odometer .odo-col').length === 2,
            'builds a 2-digit odometer for the hero amount');
-        ok(doc.querySelector('#applyModal').open === false,
-           'application modal starts closed');
+        ok(doc.querySelector('#applyView').hidden === true,
+           'application view starts hidden');
 
-        /* ---- Open the modal ---- */
+        /* ---- Enter the flow ---- */
         doc.querySelector('[data-open-apply]').click();
         await wait(80);
-        ok(doc.querySelector('#applyModal').open === true,
-           'Check Offers opens the application modal');
+        ok(doc.querySelector('#applyView').hidden === false &&
+           doc.querySelector('#main').hidden === true,
+           'Check Offers replaces the landing page with the application view');
 
         /* ---- Step 1: mobile validation ---- */
         ok(visibleStep(doc) === 0, 'starts on the mobile step');
@@ -117,7 +118,8 @@
 
         type(doc, '#mobile', '9876543210');
         submit(doc, '#formMobile');
-        await wait(60);
+        // wait past the simulated submit delay, or a false advance looks like a pass
+        await wait(1400);
         ok(doc.querySelector('#consent').closest('.field').classList.contains('has-error'),
            'requires the consent checkbox');
         ok(visibleStep(doc) === 0, 'does not advance without consent');
@@ -127,16 +129,42 @@
         fire(consent, 'change');
         submit(doc, '#formMobile');
         await waitFor(function () { return visibleStep(doc) === 1; });
-        ok(true, 'advances to basic details with valid mobile + consent');
-        ok(!doc.querySelector('#progress').hidden, 'progress bar appears from step 2');
+        ok(true, 'mobile + consent advances straight to OTP');
+        ok(doc.querySelector('#stepper').hidden,
+           'stepper stays hidden on the mobile and OTP screens');
 
-        /* ---- Step 2: basic details ---- */
+        /* ---- Step 2: OTP ---- */
+        var target = doc.querySelector('#otpTarget').textContent;
+        ok(target.indexOf('XXXXX') > -1 && target.indexOf('9876543210') === -1,
+           'masks the mobile number on the OTP screen');
+        ok(doc.querySelector('#resendBtn').disabled, 'resend is disabled while the timer runs');
+
+        submit(doc, '#formOtp');
+        await wait(60);
+        ok(doc.querySelector('#otp-0').closest('.field').classList.contains('has-error'),
+           'rejects an incomplete OTP');
+        ok(visibleStep(doc) === 1, 'does not advance on an incomplete OTP');
+
+        var boxes = doc.querySelectorAll('#otpInputs input');
+        for (var i = 0; i < boxes.length; i++) {
+          boxes[i].value = String(i + 1);
+          fire(boxes[i], 'input');
+        }
+        submit(doc, '#formOtp');
+        await waitFor(function () { return visibleStep(doc) === 2; });
+        ok(true, 'a complete OTP advances to basic details');
+        ok(!doc.querySelector('#stepper').hidden, 'stepper appears from basic details');
+        ok(doc.querySelectorAll('#stepperList li').length === 3, 'stepper has 3 nodes');
+        ok(doc.querySelectorAll('#stepperList li')[0].classList.contains('is-current'),
+           'stepper marks Basic Details as current');
+
+        /* ---- Step 3: basic details ---- */
         type(doc, '#pan', 'BADPAN123');
         submit(doc, '#formBasic');
         await wait(60);
         ok(doc.querySelector('#pan').closest('.field').classList.contains('has-error'),
            'rejects a malformed PAN');
-        ok(visibleStep(doc) === 1, 'does not advance on an invalid PAN');
+        ok(visibleStep(doc) === 2, 'does not advance on an invalid PAN');
 
         type(doc, '#email', 'not-an-email');
         submit(doc, '#formBasic');
@@ -156,56 +184,50 @@
         type(doc, '#pincode', '560001');
         type(doc, '#pan', 'ABCDE1234F');
         submit(doc, '#formBasic');
-        await waitFor(function () { return visibleStep(doc) === 2; });
+        await waitFor(function () { return visibleStep(doc) === 3; });
         ok(true, 'advances to income details with valid basic details');
+        ok(doc.querySelectorAll('#stepperList li')[0].classList.contains('is-done'),
+           'stepper marks Basic Details as done');
+        ok(doc.querySelectorAll('#stepperList li')[1].classList.contains('is-current'),
+           'stepper marks Income Details as current');
 
-        /* ---- Step 3: employment ---- */
+        /* ---- Step 4: income details ---- */
         type(doc, '#income', '10000');
         submit(doc, '#formEmployment');
         await wait(60);
         ok(doc.querySelector('#income').closest('.field').classList.contains('has-error'),
            'rejects monthly income below the minimum');
 
-        pick(doc, 'employment', 'Self Employed');
-        ok(doc.querySelector('#companyLabel').textContent === 'Business name',
+        pick(doc, 'employment', 'Self-employed');
+        ok(doc.querySelector('#companyLabel').textContent === 'Business Name*',
            'relabels company field for self-employed applicants');
         pick(doc, 'employment', 'Salaried');
 
         type(doc, '#company', 'Example Technologies Pvt Ltd');
-        type(doc, '#income', '50000');
-        ok(doc.querySelector('#income').value === '50,000', 'formats income with Indian digit grouping');
+        type(doc, '#income', '3,00,000');
+        ok(doc.querySelector('#income').value === '3,00,000', 'formats income with Indian digit grouping');
 
-        type(doc, '#household', '200000');
         submit(doc, '#formEmployment');
         await wait(60);
-        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
-           'rejects household income below the applicant’s own annual income');
+        ok(doc.querySelector('input[name="household"]').closest('.field').classList.contains('has-error'),
+           'requires an annual household income band');
+        ok(visibleStep(doc) === 3, 'does not advance without the household band');
 
-        type(doc, '#household', '1200000');
+        pick(doc, 'household', 'More than \u20B93L');
         submit(doc, '#formEmployment');
-        await waitFor(function () { return visibleStep(doc) === 3; });
-        ok(true, 'advances to OTP verification');
-
-        /* ---- Step 4: OTP ---- */
-        var target = doc.querySelector('#otpTarget').textContent;
-        ok(target.indexOf('XXXXX') > -1 && target.indexOf('9876543210') === -1,
-           'masks the mobile number on the OTP screen');
-        ok(doc.querySelector('#resendBtn').disabled, 'resend is disabled while the timer runs');
-
-        submit(doc, '#formOtp');
         await wait(60);
-        ok(doc.querySelector('#otp-0').closest('.field').classList.contains('has-error'),
-           'rejects an incomplete OTP');
-        ok(visibleStep(doc) === 3, 'does not advance on an incomplete OTP');
+        ok(doc.querySelector('#declResident').closest('.field').classList.contains('has-error'),
+           'requires the residency / politically-exposed declaration');
+        ok(visibleStep(doc) === 3, 'does not advance without the declarations');
 
-        var boxes = doc.querySelectorAll('#otpInputs input');
-        for (var i = 0; i < boxes.length; i++) {
-          boxes[i].value = String(i + 1);
-          fire(boxes[i], 'input');
-        }
-        submit(doc, '#formOtp');
+        var d1 = doc.querySelector('#declResident'), d2 = doc.querySelector('#declIndustry');
+        d1.checked = true; fire(d1, 'change');
+        d2.checked = true; fire(d2, 'change');
+        submit(doc, '#formEmployment');
         await waitFor(function () { return visibleStep(doc) === 4; });
-        ok(true, 'advances to offers after a complete OTP');
+        ok(true, 'advances to the approved offer');
+        ok(doc.querySelectorAll('#stepperList li')[2].classList.contains('is-current'),
+           'stepper marks Approved Offer as current');
 
         /* ---- Step 5: offers ---- */
         ok(doc.querySelectorAll('#offers .skeleton').length === 3, 'shows 3 skeleton loaders while fetching');
@@ -225,9 +247,10 @@
         var figures = cards[0].querySelectorAll('.offer-figures dd');
         var amount = parseInt(figures[0].textContent.replace(/\D/g, ''), 10);
         var emi = parseInt(figures[2].textContent.replace(/\D/g, ''), 10);
-        ok(amount === 600000, 'caps offer 1 at income × 12 rounded to ₹50k (₹6,00,000)');
-        // EMI for 6,00,000 @ 10.99% over 36 months ≈ ₹19,634
-        ok(emi > 19000 && emi < 20500, 'EMI is arithmetically correct (got ' + emi + ')');
+        // income 3,00,000 x 12 = 36,00,000, clamped to partner 1's 15,00,000 ceiling
+        ok(amount === 1500000, 'clamps offer 1 to the partner ceiling (got ' + amount + ')');
+        // EMI for 15,00,000 @ 10.99% over 36 months ~ 49,100
+        ok(emi > 48000 && emi < 50500, 'EMI is arithmetically correct (got ' + emi + ')');
 
         cards[0].querySelector('button').click();
         await waitFor(function () { return visibleStep(doc) === 5; });
@@ -240,9 +263,11 @@
         await waitFor(function () { return visibleStep(doc) === 0; });
         ok(doc.querySelector('#mobile').value === '', 'restart clears the form');
 
-        doc.querySelector('#modalClose').click();
+        doc.querySelector('#applyExit').click();
         await wait(80);
-        ok(doc.querySelector('#applyModal').open === false, 'close button dismisses the modal');
+        ok(doc.querySelector('#applyView').hidden === true &&
+           doc.querySelector('#main').hidden === false,
+           'exit returns to the landing page');
 
         /* ---- No brand leakage ---- */
         var html = doc.documentElement.outerHTML.toLowerCase();

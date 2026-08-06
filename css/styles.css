@@ -400,66 +400,189 @@ ul, ol { list-style: none; padding: 0; }
 .muted { font-size: .82rem; color: var(--ink-3); }
 
 /* ==========================================================================
-   Application modal
+   Application view (full page)
    ========================================================================== */
-.apply-modal {
-  width: min(520px, calc(100vw - 32px));
-  max-height: min(92vh, 860px);
-  /* the global `* { margin: 0 }` reset would otherwise kill the UA's centring */
-  margin: auto;
-  padding: 0; border: 0;
-  border-radius: var(--r-xl);
-  background: var(--surface);
-  box-shadow: var(--sh-xl);
-  overflow: hidden;
-  color: var(--ink);
-}
-.apply-modal::backdrop {
-  background: rgba(15, 23, 42, .55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-.apply-modal[open] { display: flex; flex-direction: column; animation: modalIn .28s var(--ease); }
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(16px) scale(.98); }
-  to   { opacity: 1; transform: none; }
-}
+.apply-view { min-height: 100vh; background: var(--surface); }
 
-.modal-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid var(--line); flex-shrink: 0;
-}
-.modal-logo { width: auto; height: 26px; }
-.modal-close {
+.apply-header { border-bottom: 1px solid var(--line); background: var(--surface); }
+.apply-header-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+.apply-exit {
   display: grid; place-items: center;
-  width: 36px; height: 36px; border-radius: 50%;
-  color: var(--ink-2);
+  width: 38px; height: 38px; border-radius: 50%; color: var(--ink-2);
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.modal-close:hover { background: var(--surface-alt); color: var(--ink); }
+.apply-exit:hover { background: var(--surface-alt); color: var(--ink); }
 
-.apply-card { padding: 26px 24px 30px; overflow-y: auto; }
+.apply-body { padding: 34px 24px 72px; max-width: 900px; }
 
-.step-title { font-size: 1.3rem; margin-bottom: 6px; }
-.step-sub { font-size: .92rem; color: var(--ink-2); margin-bottom: 22px; }
 .step { animation: stepIn .32s var(--ease); }
+.step-narrow { max-width: 520px; margin-inline: auto; }
 @keyframes stepIn {
   from { opacity: 0; transform: translateX(14px); }
   to   { opacity: 1; transform: none; }
 }
 
-/* ---------- Progress ---------- */
-.progress { margin-bottom: 24px; }
-.progress-track { height: 5px; border-radius: 999px; background: var(--surface-alt); overflow: hidden; }
-.progress-fill {
-  display: block; height: 100%; width: 0;
-  background: var(--grad); border-radius: 999px;
-  transition: width .4s var(--ease);
+/* ---------- Stepper ---------- */
+.stepper-shell {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 26px 32px 20px;
+  margin-bottom: 36px;
 }
-.progress-steps { display: flex; justify-content: space-between; margin-top: 10px; }
-.progress-steps li { font-size: .72rem; font-weight: 600; color: var(--ink-3); transition: color var(--dur) var(--ease); }
-.progress-steps li.is-done { color: var(--success); }
-.progress-steps li.is-current { color: var(--primary); }
+.stepper { display: flex; }
+.stepper li {
+  flex: 1; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  font-size: .9rem; font-weight: 500; color: var(--ink-3);
+  text-align: center;
+}
+/* connector runs from this node's dot to the next one */
+.stepper li:not(:last-child)::after {
+  content: ""; position: absolute; top: 11px; left: 50%; right: -50%;
+  height: 2px; background: var(--line);
+  transition: background var(--dur) var(--ease);
+}
+.stepper li.is-done::after { background: var(--primary); }
+
+.stepper .node {
+  position: relative; z-index: 1;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  display: grid; place-items: center;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.stepper .node svg { width: 13px; height: 13px; opacity: 0; }
+
+.stepper li.is-current { color: var(--ink); font-weight: 600; }
+.stepper li.is-current .node { border-color: var(--primary); }
+.stepper li.is-current .node::before {
+  content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--primary);
+}
+
+.stepper li.is-done { color: var(--primary); font-weight: 600; }
+.stepper li.is-done .node { background: var(--primary); border-color: var(--primary); }
+.stepper li.is-done .node svg { opacity: 1; }
+
+/* ---------- Mobile / OTP capture card ---------- */
+.capture-card {
+  background: var(--tint);
+  border-radius: var(--r-lg);
+  padding: 30px 28px;
+}
+.capture-title { font-size: 1.35rem; text-align: center; margin-bottom: 22px; }
+.capture-sub { font-size: .9rem; color: var(--ink-2); text-align: center; margin: -12px 0 22px; }
+.capture-card input[type="tel"],
+.capture-card input[type="text"] { background: var(--surface); }
+.capture-card .field { margin-bottom: 16px; }
+/* the consent row sits below the tinted panel but stays inside the form */
+.capture-card { padding-bottom: 22px; }
+.capture-card .consent-row { margin: 20px 0 0; }
+.capture-card .consent-row > label { color: var(--ink-2); }
+
+/* ---------- Section headings inside the flow ---------- */
+.form-title { font-size: clamp(1.2rem, 2.6vw, 1.5rem); margin-bottom: 8px; }
+.form-sub { font-size: .92rem; color: var(--ink-2); margin-bottom: 24px; }
+.step > .form-title { margin-bottom: 26px; }
+.step-success > .form-title { margin-bottom: 8px; }
+
+/* ---------- Two-column form grid ---------- */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 32px; align-items: start; }
+.span-2-left { grid-column: 1; }
+
+/* ---------- Outlined field with the label sat on the border ---------- */
+.field.outlined { position: relative; margin-bottom: 0; }
+.field.outlined > label {
+  position: absolute; top: -9px; left: 12px; z-index: 1;
+  background: var(--surface); padding: 0 6px;
+  font-size: .78rem; font-weight: 400; color: var(--ink-2);
+  margin: 0; pointer-events: none;
+  transition: color var(--dur) var(--ease);
+}
+.field.outlined input { padding: 17px 15px; }
+.field.outlined:focus-within > label { color: var(--primary); }
+.field.outlined.has-error > label { color: var(--danger); }
+
+.field.has-rupee input { padding-left: 38px; }
+.rupee-prefix {
+  position: absolute; left: 15px; top: 17px;
+  color: var(--ink); font-weight: 500; pointer-events: none;
+}
+
+/* ---------- Choice cards (gender, employment, household) ---------- */
+.choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.choice { display: block; }
+.choice input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.choice-face {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 17px 18px;
+  border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.choice-face:hover { border-color: #CBD5E1; }
+.choice-label { font-size: .95rem; color: var(--ink-2); }
+.choice-dot {
+  flex-shrink: 0; width: 19px; height: 19px; border-radius: 50%;
+  border: 2px solid var(--line);
+  display: grid; place-items: center;
+  transition: border-color var(--dur) var(--ease);
+}
+.choice input:checked + .choice-face {
+  background: var(--tint); border-color: var(--tint);
+}
+.choice input:checked + .choice-face .choice-label { color: var(--ink); font-weight: 700; }
+.choice input:checked + .choice-face .choice-dot { border-color: var(--primary); }
+.choice input:checked + .choice-face .choice-dot::after {
+  content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--primary);
+}
+.choice input:focus-visible + .choice-face { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- Consent rows with a circular tick ---------- */
+.consent-row { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.consent-row > label {
+  font-size: .84rem; font-weight: 400; color: var(--ink-2);
+  line-height: 1.6; margin: 0;
+}
+.consent-row .error { grid-column: 2; }
+
+.tick-box {
+  appearance: none; -webkit-appearance: none;
+  flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px;
+  border: 2px solid var(--ink-3); border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.tick-box::after {
+  content: ""; width: 5px; height: 9px;
+  border: solid var(--surface); border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+  opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+.tick-box:checked { background: var(--success); border-color: var(--success); }
+.tick-box:checked::after { opacity: 1; }
+.field.has-error .tick-box { border-color: var(--danger); }
+
+/* ---------- Notes, actions, declarations ---------- */
+.verify-note {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: .9rem; color: var(--ink-2); margin: 34px 0 20px;
+}
+.note-icon {
+  display: grid; place-items: center;
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--surface-alt); color: var(--ink-2);
+  font-size: .82rem; font-weight: 700;
+}
+
+.actions { display: flex; gap: 12px; margin-top: 24px; }
+.actions-center { justify-content: center; }
+.btn-wide { min-width: 280px; }
+.btn-lg { padding: 18px 30px; font-size: 1.05rem; }
+
+.declarations { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 32px; margin-top: 30px; }
 
 /* ==========================================================================
    Forms
@@ -536,7 +659,7 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
 }
 .otp-inputs input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30, 107, 255, .14); }
 .field.has-error .otp-inputs input { border-color: var(--danger); background: var(--danger-bg); }
-.resend { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--ink-2); }
+.resend { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--ink-2); margin: 16px 0 20px; }
 
 /* ==========================================================================
    Offers
@@ -671,8 +794,20 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
   .dla-grid { grid-template-columns: 1fr; max-width: 320px; margin-inline: auto; }
 }
 
+@media (max-width: 860px) {
+  .form-grid { grid-template-columns: 1fr; gap: 24px; }
+  .span-2-left { grid-column: 1; }
+  .declarations { grid-template-columns: 1fr; }
+  .stepper-shell { padding: 22px 16px 16px; }
+  .stepper li { font-size: .78rem; }
+}
+
 @media (max-width: 720px) {
   .section { padding: 52px 0; }
+  .apply-header-inner { height: 64px; }
+  .actions-center { flex-direction: column-reverse; }
+  .actions-center .btn { width: 100%; min-width: 0; }
+  .capture-card { padding: 24px 20px; }
   .rule-title { gap: 12px; white-space: normal; text-align: center; }
   .footer-top { grid-template-columns: 1fr; gap: 32px; }
   .btn-hero { width: 100%; padding: 20px 32px; }
@@ -691,9 +826,8 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
   .otp-inputs { gap: 6px; }
   .actions { flex-direction: column-reverse; }
   .actions .btn { width: 100%; }
-  .progress-steps li { font-size: .65rem; }
   .offer-pill { flex-basis: 100%; margin-left: 0; text-align: center; }
-  .apply-card { padding: 22px 18px 26px; }
+  .apply-body { padding: 24px 16px 56px; }
   .support-card { padding: 24px; }
 }
 
@@ -711,5 +845,5 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
 }
 
 @media print {
-  .site-header, .toasts, .apply-modal, .btn-hero, .skip-link, .car-btn { display: none; }
+  .site-header, .toasts, .apply-view, .btn-hero, .skip-link, .car-btn { display: none; }
 }

@@ -30,17 +30,27 @@ Exits non-zero on failure. Override the browser with `CHROME=/path/to/chrome`.
 ## Structure
 
 ```
-index.html            landing page + the 5-step application modal
+index.html            landing page + the 5-screen application view
 css/styles.css        design tokens + components (single stylesheet)
 js/constants.js       brand, copy, partners, offers, validation rules, timings
-js/app.js             flow state machine, validation, modal, carousels, odometer
+js/app.js             flow state machine, validation, stepper, carousels, odometer
 assets/brand/         logo, favicons, OG image, hero illustration
 tests/                integration suite + runner
 ```
 
-The application flow lives in a native `<dialog>` opened by any **Check Offers**
-button — that gives focus trapping, Esc-to-close and the backdrop for free.
-`/#apply` deep-links straight into it.
+The application is a full-page view that replaces the landing page when any
+**Check Offers** button is pressed; `/#apply` deep-links straight into it.
+
+Screen order:
+
+1. **Mobile** — number + consent
+2. **OTP** — 6-digit verification
+3. **Basic Details** — gender, DOB, email, pincode, PAN
+4. **Income Details** — employment, company, monthly income, household band
+5. **Approved Offer** — partner offers with amount, rate and EMI
+
+Only the last three map onto the 3-node stepper, so the mobile and OTP screens
+show no stepper.
 
 Carousels are native CSS scroll-snap driven by arrow buttons; the hero amount
 uses a CSS-transform odometer. No carousel or animation library.

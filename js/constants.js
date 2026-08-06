@@ -13,10 +13,19 @@ var AP = (function () {
     supportPhone: '1800 000 000'
   };
 
-  /* ---------- Flow ---------- */
-  var STEPS = ['Mobile', 'Details', 'Income', 'Verify', 'Offers'];
+  /* ---------- Flow ----------
+     Screen order: mobile → OTP → basic details → income details → offer.
+     Mobile and OTP sit ahead of the stepper, so only the last three screens
+     map onto a stepper node. */
+  var STEP = { MOBILE: 0, OTP: 1, BASIC: 2, EMPLOYMENT: 3, OFFERS: 4, SUCCESS: 5 };
 
-  var STEP = { MOBILE: 0, BASIC: 1, EMPLOYMENT: 2, OTP: 3, OFFERS: 4, SUCCESS: 5 };
+  var STEPPER = ['Basic Details', 'Income Details', 'Approved Offer'];
+
+  var STEPPER_NODE = {};
+  STEPPER_NODE[STEP.BASIC] = 0;
+  STEPPER_NODE[STEP.EMPLOYMENT] = 1;
+  STEPPER_NODE[STEP.OFFERS] = 2;
+  STEPPER_NODE[STEP.SUCCESS] = 2;
 
   /* ---------- Timings (ms) ---------- */
   var TIMING = {
@@ -96,7 +105,7 @@ var AP = (function () {
   ];
 
   return {
-    BRAND: BRAND, STEPS: STEPS, STEP: STEP, TIMING: TIMING,
+    BRAND: BRAND, STEP: STEP, STEPPER: STEPPER, STEPPER_NODE: STEPPER_NODE, TIMING: TIMING,
     RULES: RULES, PATTERNS: PATTERNS, OFFERS: OFFERS,
     PARTNERS: PARTNERS, DLA_PARTNERS: DLA_PARTNERS, REVIEWS: REVIEWS
   };
