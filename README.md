@@ -30,13 +30,20 @@ Exits non-zero on failure. Override the browser with `CHROME=/path/to/chrome`.
 ## Structure
 
 ```
-index.html            markup for the landing page and all 5 application steps
+index.html            landing page + the 5-step application modal
 css/styles.css        design tokens + components (single stylesheet)
-js/constants.js       brand, copy, offers, validation rules, timings
-js/app.js             flow state machine, validation, toasts, offer rendering
-assets/brand/         logo, favicons, OG image
+js/constants.js       brand, copy, partners, offers, validation rules, timings
+js/app.js             flow state machine, validation, modal, carousels, odometer
+assets/brand/         logo, favicons, OG image, hero illustration
 tests/                integration suite + runner
 ```
+
+The application flow lives in a native `<dialog>` opened by any **Check Offers**
+button — that gives focus trapping, Esc-to-close and the backdrop for free.
+`/#apply` deep-links straight into it.
+
+Carousels are native CSS scroll-snap driven by arrow buttons; the hero amount
+uses a CSS-transform odometer. No carousel or animation library.
 
 ## Brand
 

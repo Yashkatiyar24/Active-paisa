@@ -81,6 +81,24 @@
 
     (async function run() {
       try {
+        /* ---- Landing page ---- */
+        ok(doc.querySelectorAll('#partnerTrack .partner-card').length === 6,
+           'renders 6 lending partner cards');
+        ok(doc.querySelectorAll('#dlaGrid .dla-card').length === 2,
+           'renders 2 digital lending partner cards');
+        ok(doc.querySelectorAll('#reviewTrack .review-card').length === 3,
+           'renders 3 review cards');
+        ok(doc.querySelectorAll('.odometer .odo-col').length === 2,
+           'builds a 2-digit odometer for the hero amount');
+        ok(doc.querySelector('#applyModal').open === false,
+           'application modal starts closed');
+
+        /* ---- Open the modal ---- */
+        doc.querySelector('[data-open-apply]').click();
+        await wait(80);
+        ok(doc.querySelector('#applyModal').open === true,
+           'Check Offers opens the application modal');
+
         /* ---- Step 1: mobile validation ---- */
         ok(visibleStep(doc) === 0, 'starts on the mobile step');
 
@@ -221,6 +239,10 @@
         doc.querySelector('#restartBtn').click();
         await waitFor(function () { return visibleStep(doc) === 0; });
         ok(doc.querySelector('#mobile').value === '', 'restart clears the form');
+
+        doc.querySelector('#modalClose').click();
+        await wait(80);
+        ok(doc.querySelector('#applyModal').open === false, 'close button dismisses the modal');
 
         /* ---- No brand leakage ---- */
         var html = doc.documentElement.outerHTML.toLowerCase();

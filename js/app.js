@@ -256,8 +256,7 @@
     var focusable = active && $('input:not([type="hidden"]), button', active);
     if (focusable) focusable.focus({ preventScroll: true });
 
-    var card = $('#applyCard');
-    if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start' });
+    $('#applyCard').scrollTop = 0;
   }
 
   /* Async submit with a loading state on the button. */
@@ -560,34 +559,155 @@
   });
 
   /* ==========================================================================
+     Application modal
+     ========================================================================== */
+  var modal = $('#applyModal');
+
+  function openApply() {
+    if (!modal.open) modal.showModal();
+    var active = $('.step[data-step="' + state.step + '"]');
+    var focusable = active && $('input:not([type="hidden"]), button', active);
+    if (focusable) focusable.focus({ preventScroll: true });
+  }
+
+  $$('[data-open-apply]').forEach(function (btn) {
+    btn.addEventListener('click', openApply);
+  });
+
+  $('#modalClose').addEventListener('click', function () { modal.close(); });
+
+  // Click outside the panel closes it — <dialog> gives us Esc and focus trapping free.
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) modal.close();
+  });
+
+  // Deep link: /#apply opens the flow directly.
+  if (location.hash === '#apply') openApply();
+  window.addEventListener('hashchange', function () {
+    if (location.hash === '#apply') openApply();
+  });
+
+  /* ==========================================================================
+     Hero odometer
+     ========================================================================== */
+  (function odometer() {
+    var host = $('.odometer');
+    if (!host) return;
+
+    var digits = String(host.dataset.value || '').split('');
+    host.textContent = '';
+
+    digits.forEach(function (digit, i) {
+      var col = el('span', 'odo-col');
+      var list = el('span', 'odo-list');
+      // two full 0-9 runs so the reel spins a lap before landing
+      for (var n = 0; n < 20; n++) list.appendChild(el('span', 'odo-d', String(n % 10)));
+      col.appendChild(list);
+      host.appendChild(col);
+
+      var target = 10 + Number(digit);   // land on the second run
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          list.style.transform = 'translateY(-' + (target * 100 / 20) + '%)';
+        }, 90 * i);
+      });
+    });
+  })();
+
+  /* ==========================================================================
+     Carousels (native scroll-snap + arrow buttons)
+     ========================================================================== */
+  $$('[data-carousel]').forEach(function (root) {
+    var track = $('[data-car-track]', root);
+    var prev = $('[data-car-prev]', root);
+    var next = $('[data-car-next]', root);
+
+    function page() {
+      var first = track.firstElementChild;
+      return first ? first.getBoundingClientRect().width + 20 : track.clientWidth;
+    }
+
+    function sync() {
+      var max = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft < 4;
+      next.disabled = track.scrollLeft >= max - 4;
+    }
+
+    prev.addEventListener('click', function () { track.scrollLeft -= page(); });
+    next.addEventListener('click', function () { track.scrollLeft += page(); });
+    track.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+
+    // Re-sync once cards are populated.
+    new MutationObserver(sync).observe(track, { childList: true });
+  });
+
+  /* ==========================================================================
      Static content
      ========================================================================== */
+  function partnerCard(p, tag) {
+    var li = el('li', 'partner-card');
+    li.appendChild(el('div', 'p-logo', p.badge));
+    li.appendChild(el('h3', 'p-name', p.legal));
+    li.appendChild(el('span', 'p-tag', 'Personal Loan'));
+
+    var block = el('div', 'p-block');
+    block.appendChild(el('div', 'p-role', tag));
+    block.appendChild(el('strong', null, p.officer));
+    block.appendChild(el('div', null, p.email));
+    block.appendChild(el('div', null, p.phone));
+    li.appendChild(block);
+
+    var links = el('div', 'p-links');
+    ['Privacy Policy', 'T&C', 'Grievance Redressal'].forEach(function (label) {
+      var a = el('a', null, label);
+      a.href = '#grievance';
+      links.appendChild(a);
+    });
+    li.appendChild(links);
+
+    return li;
+  }
+
   (function renderPartners() {
-    var host = $('#partnerGrid');
-    AP.PARTNERS.forEach(function (p) {
-      var li = el('li', 'partner-card');
-      li.appendChild(el('span', 'offer-badge', p.badge));
-      var body = el('div');
-      body.appendChild(el('h3', null, p.name));
-      body.appendChild(el('p', null, p.note));
-      li.appendChild(body);
-      host.appendChild(li);
+    var host = $('#partnerTrack');
+    AP.PARTNERS.forEach(function (p) { host.appendChild(partnerCard(p, 'Grievance Redressal')); });
+  })();
+
+  (function renderDla() {
+    var host = $('#dlaGrid');
+    AP.DLA_PARTNERS.forEach(function (p) {
+      var card = partnerCard(p, 'Grievance Redressal');
+      card.className = 'dla-card';
+      host.appendChild(card);
     });
   })();
 
   (function renderReviews() {
-    var host = $('#reviewGrid');
+    var host = $('#reviewTrack');
     AP.REVIEWS.forEach(function (r) {
       var li = el('li', 'review-card');
       li.appendChild(el('blockquote', null, r.text));
       var author = el('div', 'review-author');
-      author.appendChild(el('span', 'offer-badge', r.badge));
+      author.appendChild(el('span', 'p-logo', r.badge));
       var meta = el('div');
       meta.appendChild(el('strong', null, r.name));
       meta.appendChild(el('span', null, r.city));
       author.appendChild(meta);
       li.appendChild(author);
       host.appendChild(li);
+    });
+  })();
+
+  /* ---------- Mobile menu ---------- */
+  (function menu() {
+    var btn = $('#menuBtn');
+    var nav = $('#headerNav');
+    btn.addEventListener('click', function () {
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      nav.classList.toggle('is-open', !open);
     });
   })();
 

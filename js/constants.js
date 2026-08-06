@@ -58,11 +58,31 @@ var AP = (function () {
       rate: 14.25, tenure: 48, multiple: 18, cap: 1000000, pill: 'Highest amount' }
   ];
 
-  /* ---------- Marketing content ---------- */
+  /* ---------- Lending partners ----------
+     Placeholder entries. Grievance contacts use the reserved example.com domain
+     so nothing here can route to a real person.
+     TODO: replace with each lender's real regulatory disclosure before launch. */
   var PARTNERS = [
-    { badge: 'B1', name: 'Bank Partner 1', note: 'Personal loans from ₹50,000 to ₹15,00,000' },
-    { badge: 'B2', name: 'Bank Partner 2', note: 'Tenures from 12 to 48 months' },
-    { badge: 'B3', name: 'Bank Partner 3', note: 'Interest starting at 10.99% p.a.' }
+    { badge: 'B1', name: 'Bank Partner 1', legal: 'Bank Partner 1 Finance Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner1.example', phone: '1800 000 001' },
+    { badge: 'B2', name: 'Bank Partner 2', legal: 'Bank Partner 2 Capital Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner2.example', phone: '1800 000 002' },
+    { badge: 'B3', name: 'Bank Partner 3', legal: 'Bank Partner 3 Financial Services Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner3.example', phone: '1800 000 003' },
+    { badge: 'B4', name: 'Bank Partner 4', legal: 'Bank Partner 4 Fincorp Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner4.example', phone: '1800 000 004' },
+    { badge: 'B5', name: 'Bank Partner 5', legal: 'Bank Partner 5 Services Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner5.example', phone: '1800 000 005' },
+    { badge: 'B6', name: 'Bank Partner 6', legal: 'Bank Partner 6 Bank Limited',
+      officer: 'Grievance Officer', email: 'grievance@bankpartner6.example', phone: '1800 000 006' }
+  ];
+
+  /* ---------- Digital lending partners ---------- */
+  var DLA_PARTNERS = [
+    { badge: 'D1', name: 'Digital Partner 1', legal: 'Digital Partner 1 Technologies Private Limited',
+      officer: 'Nodal Officer', email: 'nodal@digitalpartner1.example', phone: '1800 000 011' },
+    { badge: 'D2', name: 'Digital Partner 2', legal: 'Digital Partner 2 Limited',
+      officer: 'Nodal Officer', email: 'nodal@digitalpartner2.example', phone: '1800 000 012' }
   ];
 
   /* TODO: replace with real, consented customer testimonials before launch. */
@@ -78,6 +98,6 @@ var AP = (function () {
   return {
     BRAND: BRAND, STEPS: STEPS, STEP: STEP, TIMING: TIMING,
     RULES: RULES, PATTERNS: PATTERNS, OFFERS: OFFERS,
-    PARTNERS: PARTNERS, REVIEWS: REVIEWS
+    PARTNERS: PARTNERS, DLA_PARTNERS: DLA_PARTNERS, REVIEWS: REVIEWS
   };
 })();
