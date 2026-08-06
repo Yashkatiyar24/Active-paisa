@@ -185,7 +185,7 @@
     });
     if (firstBad) {
       firstBad.focus();
-      toast('Please fix the highlighted fields.', 'error');
+      toast('Some fields need another look.', 'error');
     }
     return ok;
   }
@@ -423,7 +423,7 @@
     otpBoxes.forEach(function (b) { b.value = ''; });
     clearError(otpBoxes[0]);
     countdown();
-    toast('Demo mode — enter any 6 digits to continue.');
+    toast('Demo build — any 6 digits will get you through.');
   }
 
   function countdown() {
@@ -449,7 +449,7 @@
     countdown();
     otpBoxes.forEach(function (b) { b.value = ''; });
     otpBoxes[0].focus();
-    toast('A new code has been sent.', 'success');
+    toast('Fresh code on its way.', 'success');
   });
 
   formOtp.addEventListener('submit', function (e) {
@@ -458,7 +458,7 @@
 
     if (code.length !== RULES.otpLength) {
       setError(otpBoxes[0], 'Please enter all ' + RULES.otpLength + ' digits.');
-      toast('Incomplete verification code.', 'error');
+      toast('That code is incomplete.', 'error');
       return;
     }
     clearError(otpBoxes[0]);
@@ -466,7 +466,7 @@
     // TODO: verify the code server-side. Any 6 digits pass in this demo build.
     withLoading($('button[type="submit"]', formOtp), TIMING.submitDelay, function () {
       clearInterval(state.resendId);
-      toast('Mobile number verified.', 'success');
+      toast('Number confirmed.', 'success');
       goTo(STEP.BASIC);
     });
   });
@@ -539,25 +539,25 @@
 
   function loadOffers() {
     offersHost.textContent = '';
-    $('#offersSub').textContent = 'Finding the best offers for you…';
+    $('#offersSub').textContent = 'Matching you with lenders…';
     for (var i = 0; i < 3; i++) offersHost.appendChild(skeleton());
 
     // TODO: replace the timeout with the real offers request.
     setTimeout(function () {
       offersHost.textContent = '';
       AP.OFFERS.forEach(function (offer) { offersHost.appendChild(offerCard(offer)); });
-      $('#offersSub').textContent = 'You have ' + AP.OFFERS.length + ' pre-approved offers. Select one to continue.';
-      toast('Great news — you have ' + AP.OFFERS.length + ' offers!', 'success');
+      $('#offersSub').textContent = AP.OFFERS.length + ' lenders have pre-approved you. Pick whichever suits you.';
+      toast(AP.OFFERS.length + ' offers are ready for you.', 'success');
     }, TIMING.offersDelay);
   }
 
   function finish(offer, amount, monthly) {
     $('#successSub').textContent =
-      'Your application for ' + money(amount) + ' from ' + offer.name +
-      ' at ' + offer.rate.toFixed(2) + '% p.a. (' + money(monthly) + '/month for ' +
-      offer.tenure + ' months) has been received. Our partner will contact you shortly.';
+      'We have your request for ' + money(amount) + ' from ' + offer.name + ' at ' +
+      offer.rate.toFixed(2) + '% p.a. — ' + money(monthly) + ' a month across ' +
+      offer.tenure + ' months. The lender will be in touch shortly.';
     goTo(STEP.SUCCESS);
-    toast('Application submitted successfully.', 'success');
+    toast('Application is in.', 'success');
   }
 
   /* ==========================================================================
