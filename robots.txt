@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /assets/brand/og-image.png
+
+Sitemap: https://www.activpaisa.com/sitemap.xml

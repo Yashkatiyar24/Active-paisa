@@ -1,0 +1,12 @@
+{
+  "name": "activ-paisa",
+  "version": "1.0.0",
+  "description": "Activ Paisa — instant personal loan landing page and application flow",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "bash tests/run.sh"
+  },
+  "keywords": ["personal-loan", "fintech", "landing-page"],
+  "license": "UNLICENSED"
+}

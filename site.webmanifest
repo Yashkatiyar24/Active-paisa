@@ -1,0 +1,15 @@
+{
+  "name": "Activ Paisa — Instant Personal Loan",
+  "short_name": "Activ Paisa",
+  "description": "Fast approval, 100% digital personal loans with no hidden charges.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#1E6BFF",
+  "lang": "en-IN",
+  "icons": [
+    { "src": "assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

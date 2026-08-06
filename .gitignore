@@ -1,0 +1,15 @@
+# Original captured page kept locally as layout reference only.
+# Third-party content and contact details — must never be published.
+www.moneycontrolpay.com/
+images.moneycontrol.com/
+www.googletagmanager.com/
+
+# Local tooling / credentials
+.jetro/
+
+# Build output
+dist/
+node_modules/
+
+# macOS
+.DS_Store

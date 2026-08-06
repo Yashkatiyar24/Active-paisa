@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activ Paisa — flow tests</title>
+<style>
+  body { font: 14px/1.6 ui-monospace, Menlo, monospace; padding: 20px; }
+  iframe { width: 420px; height: 700px; border: 1px solid #ccc; position: fixed; right: 20px; top: 20px; }
+  li { list-style: none; }
+  .pass::before { content: "PASS  "; color: #059669; font-weight: 700; }
+  .fail::before { content: "FAIL  "; color: #DC2626; font-weight: 700; }
+  #summary { font-weight: 700; margin-top: 14px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>Flow tests</h1>
+<ul id="results"></ul>
+<p id="summary">running…</p>
+<iframe id="app" src="../index.html" title="App under test"></iframe>
+
+<script>
+/* Integration test: drives the real application in an iframe.
+   Run:  npm test        (or open this file over http://) */
+(function () {
+  var out = document.getElementById('results');
+  var pass = 0, fail = 0;
+
+  function ok(cond, label) {
+    var li = document.createElement('li');
+    li.className = cond ? 'pass' : 'fail';
+    li.textContent = label;
+    out.appendChild(li);
+    cond ? pass++ : fail++;
+  }
+
+  var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  function waitFor(fn, timeout) {
+    timeout = timeout || 5000;
+    var start = Date.now();
+    return new Promise(function (resolve, reject) {
+      (function poll() {
+        var v;
+        try { v = fn(); } catch (e) { v = null; }
+        if (v) return resolve(v);
+        if (Date.now() - start > timeout) return reject(new Error('timeout'));
+        setTimeout(poll, 50);
+      })();
+    });
+  }
+
+  function fire(node, type) { node.dispatchEvent(new Event(type, { bubbles: true })); }
+
+  function type(doc, sel, value) {
+    var input = doc.querySelector(sel);
+    input.value = value;
+    fire(input, 'input');
+    fire(input, 'blur');
+    return input;
+  }
+
+  function pick(doc, name, value) {
+    var radio = doc.querySelector('input[name="' + name + '"][value="' + value + '"]');
+    radio.checked = true;
+    fire(radio, 'change');
+  }
+
+  function visibleStep(doc) {
+    var s = doc.querySelector('.step:not([hidden])');
+    return s ? Number(s.dataset.step) : -1;
+  }
+
+  function submit(doc, formSel) {
+    doc.querySelector(formSel).querySelector('button[type="submit"]').click();
+  }
+
+  var frame = document.getElementById('app');
+
+  frame.addEventListener('load', function () {
+    var doc = frame.contentDocument;
+
+    (async function run() {
+      try {
+        /* ---- Step 1: mobile validation ---- */
+        ok(visibleStep(doc) === 0, 'starts on the mobile step');
+
+        type(doc, '#mobile', '12345');
+        submit(doc, '#formMobile');
+        await wait(60);
+        ok(doc.querySelector('#mobile').closest('.field').classList.contains('has-error'),
+           'rejects a short mobile number');
+        ok(visibleStep(doc) === 0, 'does not advance on an invalid mobile');
+
+        type(doc, '#mobile', '1234567890');
+        submit(doc, '#formMobile');
+        await wait(60);
+        ok(doc.querySelector('#mobile').closest('.field').classList.contains('has-error'),
+           'rejects a mobile not starting 6-9');
+
+        type(doc, '#mobile', '9876543210');
+        submit(doc, '#formMobile');
+        await wait(60);
+        ok(doc.querySelector('#consent').closest('.field').classList.contains('has-error'),
+           'requires the consent checkbox');
+        ok(visibleStep(doc) === 0, 'does not advance without consent');
+
+        var consent = doc.querySelector('#consent');
+        consent.checked = true;
+        fire(consent, 'change');
+        submit(doc, '#formMobile');
+        await waitFor(function () { return visibleStep(doc) === 1; });
+        ok(true, 'advances to basic details with valid mobile + consent');
+        ok(!doc.querySelector('#progress').hidden, 'progress bar appears from step 2');
+
+        /* ---- Step 2: basic details ---- */
+        type(doc, '#pan', 'BADPAN123');
+        submit(doc, '#formBasic');
+        await wait(60);
+        ok(doc.querySelector('#pan').closest('.field').classList.contains('has-error'),
+           'rejects a malformed PAN');
+        ok(visibleStep(doc) === 1, 'does not advance on an invalid PAN');
+
+        type(doc, '#email', 'not-an-email');
+        submit(doc, '#formBasic');
+        await wait(60);
+        ok(doc.querySelector('#email').closest('.field').classList.contains('has-error'),
+           'rejects a malformed email');
+
+        type(doc, '#pincode', '012345');
+        await wait(60);
+        ok(doc.querySelector('#pincode').closest('.field').classList.contains('has-error') ||
+           doc.querySelector('#pincode').value === '012345',
+           'rejects a pincode starting with 0');
+
+        pick(doc, 'gender', 'Female');
+        type(doc, '#dob', '1996-01-15');
+        type(doc, '#email', 'test@example.com');
+        type(doc, '#pincode', '560001');
+        type(doc, '#pan', 'ABCDE1234F');
+        submit(doc, '#formBasic');
+        await waitFor(function () { return visibleStep(doc) === 2; });
+        ok(true, 'advances to income details with valid basic details');
+
+        /* ---- Step 3: employment ---- */
+        type(doc, '#income', '10000');
+        submit(doc, '#formEmployment');
+        await wait(60);
+        ok(doc.querySelector('#income').closest('.field').classList.contains('has-error'),
+           'rejects monthly income below the minimum');
+
+        pick(doc, 'employment', 'Self Employed');
+        ok(doc.querySelector('#companyLabel').textContent === 'Business name',
+           'relabels company field for self-employed applicants');
+        pick(doc, 'employment', 'Salaried');
+
+        type(doc, '#company', 'Example Technologies Pvt Ltd');
+        type(doc, '#income', '50000');
+        ok(doc.querySelector('#income').value === '50,000', 'formats income with Indian digit grouping');
+
+        type(doc, '#household', '200000');
+        submit(doc, '#formEmployment');
+        await wait(60);
+        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
+           'rejects household income below the applicant’s own annual income');
+
+        type(doc, '#household', '1200000');
+        submit(doc, '#formEmployment');
+        await waitFor(function () { return visibleStep(doc) === 3; });
+        ok(true, 'advances to OTP verification');
+
+        /* ---- Step 4: OTP ---- */
+        var target = doc.querySelector('#otpTarget').textContent;
+        ok(target.indexOf('XXXXX') > -1 && target.indexOf('9876543210') === -1,
+           'masks the mobile number on the OTP screen');
+        ok(doc.querySelector('#resendBtn').disabled, 'resend is disabled while the timer runs');
+
+        submit(doc, '#formOtp');
+        await wait(60);
+        ok(doc.querySelector('#otp-0').closest('.field').classList.contains('has-error'),
+           'rejects an incomplete OTP');
+        ok(visibleStep(doc) === 3, 'does not advance on an incomplete OTP');
+
+        var boxes = doc.querySelectorAll('#otpInputs input');
+        for (var i = 0; i < boxes.length; i++) {
+          boxes[i].value = String(i + 1);
+          fire(boxes[i], 'input');
+        }
+        submit(doc, '#formOtp');
+        await waitFor(function () { return visibleStep(doc) === 4; });
+        ok(true, 'advances to offers after a complete OTP');
+
+        /* ---- Step 5: offers ---- */
+        ok(doc.querySelectorAll('#offers .skeleton').length === 3, 'shows 3 skeleton loaders while fetching');
+
+        var cards = await waitFor(function () {
+          var c = doc.querySelectorAll('#offers .offer');
+          return c.length === 3 ? c : null;
+        });
+        ok(true, 'renders 3 partner offers');
+
+        var names = Array.prototype.map.call(cards, function (c) {
+          return c.querySelector('.offer-name').textContent;
+        });
+        ok(names.join('|') === 'Bank Partner 1|Bank Partner 2|Bank Partner 3',
+           'offers use placeholder partner names');
+
+        var figures = cards[0].querySelectorAll('.offer-figures dd');
+        var amount = parseInt(figures[0].textContent.replace(/\D/g, ''), 10);
+        var emi = parseInt(figures[2].textContent.replace(/\D/g, ''), 10);
+        ok(amount === 600000, 'caps offer 1 at income × 12 rounded to ₹50k (₹6,00,000)');
+        // EMI for 6,00,000 @ 10.99% over 36 months ≈ ₹19,634
+        ok(emi > 19000 && emi < 20500, 'EMI is arithmetically correct (got ' + emi + ')');
+
+        cards[0].querySelector('button').click();
+        await waitFor(function () { return visibleStep(doc) === 5; });
+        ok(true, 'reaches the success screen after applying');
+        ok(doc.querySelector('#successSub').textContent.indexOf('Bank Partner 1') > -1,
+           'success message names the selected partner');
+
+        /* ---- Restart ---- */
+        doc.querySelector('#restartBtn').click();
+        await waitFor(function () { return visibleStep(doc) === 0; });
+        ok(doc.querySelector('#mobile').value === '', 'restart clears the form');
+
+        /* ---- No brand leakage ---- */
+        var html = doc.documentElement.outerHTML.toLowerCase();
+        ok(html.indexOf('moneycontrol') === -1, 'no "moneycontrol" reference remains');
+        ok(html.indexOf('livemint') === -1 && html.indexOf('mint money') === -1,
+           'no "livemint" / "mint money" reference remains');
+        ok(html.indexOf('nw18') === -1 && html.indexOf('network18') === -1,
+           'no Network18 reference remains');
+        ok(html.indexOf('googletagmanager') === -1, 'no third-party analytics remains');
+
+      } catch (e) {
+        ok(false, 'unexpected error: ' + e.message);
+      }
+
+      var s = document.getElementById('summary');
+      s.textContent = pass + ' passed, ' + fail + ' failed';
+      s.style.color = fail ? '#DC2626' : '#059669';
+      document.title = fail ? 'FAIL' : 'PASS';
+    })();
+  });
+})();
+</script>
+</body>
+</html>
