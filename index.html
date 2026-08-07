@@ -48,7 +48,6 @@
       <img src="assets/brand/logo-640.png" width="640" height="142" alt="Activ Paisa" class="brand-logo">
     </a>
     <nav class="header-nav" id="headerNav" aria-label="Primary">
-      <a href="index.html">Personal Loan</a>
       <a href="business-loan.html">Business Loan</a>
       <a href="home-loan.html">Home Loan</a>
       <a href="#partners">Lending Partners</a>
@@ -58,43 +57,67 @@
 </header>
 <main id="main">
 
-  <section class="lp-hero" aria-labelledby="lpTitle">
-    <div class="container lp-hero-grid">
-      <div class="lp-copy">
-        <p class="lp-eyebrow" data-reveal>Cash in minutes</p>
-        <h1 class="lp-title" id="lpTitle" data-reveal>Personal loans up to</h1>
-        <p class="lp-amount" data-reveal>
-          <span aria-hidden="true">&#8377;</span>
+  <section class="hero" aria-labelledby="loan-heading">
+    <div class="container hero-grid">
+
+      <div class="hero-content">
+        <p class="tagline">
+          <svg viewBox="0 0 17 31" width="15" height="27" aria-hidden="true" focusable="false">
+            <path d="M10.16 12.38c1.81 0 3.49 0 5.16 0 .51 0 1.1 0 1.21.59.07.39-.1.93-.36 1.25-4.29 5.29-8.6 10.55-12.91 15.82-.36.44-.72.89-1.36.59-.57-.27-.62-.75-.45-1.33 1.08-3.75 2.14-7.5 3.2-11.25.07-.25.13-.5.22-.81-1.05-.11-2.05-.22-3.05-.32-.26-.03-.51-.03-.77-.08-1.07-.17-1.35-.84-.7-1.72 1.6-2.12 3.23-4.23 4.84-6.35 2.09-2.74 4.17-5.49 6.28-8.2.23-.3.7-.57 1.06-.57.62 0 .86.61.65 1.38-.87 3.16-1.74 6.31-2.61 9.46-.13.48-.26.95-.42 1.54Z"/>
+          </svg>
+          Cash in Minutes
+        </p>
+
+        <h1 class="hero-heading" id="loan-heading">Get Personal Loan up to</h1>
+
+        <p class="hero-amount">
+          <span class="rupee" aria-hidden="true">&#8377;</span>
           <span class="odometer" data-value="50" aria-hidden="true"></span>
           <span class="sr-only">50</span>
-          <span>Lakhs</span>
+          <span class="lakhs">Lakhs</span>
         </p>
-        <p class="lp-lede" data-reveal>For a wedding, a medical bill, a move, or clearing what you already owe. Unsecured, fully online, and compared across lenders in one go.</p>
 
-        <dl class="lp-facts" data-reveal>
-        <div><dt>Loan range</dt><dd>₹50,000 – ₹50 Lakhs</dd></div>
-        <div><dt>Interest from</dt><dd>9.99% p.a.</dd></div>
-        <div><dt>EMI starts at</dt><dd>₹999/month</dd></div>
-        <div><dt>Tenure</dt><dd>12 to 60 months</dd></div>
-        </dl>
+        <ul class="highlights" role="list">
+          <li>
+            <span class="hl-icon" aria-hidden="true">&#8377;</span>
+            <span class="hl-label">Loan from</span>
+            <span class="hl-value">&#8377;50,000 to &#8377;50 Lakhs</span>
+          </li>
+          <li>
+            <span class="hl-icon" aria-hidden="true">%</span>
+            <span class="hl-label">Interest starting</span>
+            <span class="hl-value">@9.99%</span>
+          </li>
+          <li>
+            <span class="hl-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 7h18v12H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 7l3-3h12l3 3M8 13h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="hl-label">Monthly EMI from</span>
+            <span class="hl-value">&#8377;999</span>
+          </li>
+          <li>
+            <span class="hl-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5.5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="hl-label">Tenure up to</span>
+            <span class="hl-value">5 years</span>
+          </li>
+        </ul>
 
-        <div class="lp-cta-row" data-reveal>
-          <button class="btn btn-primary btn-hero" id="heroCta" data-open-apply>Check Offers</button>
-          <a class="btn btn-ghost" href="#emi">Calculate EMI</a>
-        </div>
-        <p class="lp-trust" data-reveal>Checking your options leaves your credit score untouched.</p>
+        <p class="social-proof">
+          <span class="avatars" aria-hidden="true">
+            <span>A</span><span>R</span><span>P</span><span>S</span>
+          </span>
+          Over 20,000 borrowers funded so far
+        </p>
+
+        <button class="btn btn-primary btn-hero" id="heroCta" data-open-apply>Check Offers</button>
       </div>
 
-      <aside class="lp-hero-card" data-reveal aria-label="How it works">
-        <h2>How it works</h2>
-        <p>Three steps, entirely online.</p>
-        <ol class="lp-steps">
-          <li><span class="n">1</span><div><strong>Verify your number</strong><span>One OTP, and nothing yet touches your credit score.</span></div></li>
-          <li><span class="n">2</span><div><strong>Share your details</strong><span>Identity, address, income and the documents on the checklist below.</span></div></li>
-          <li><span class="n">3</span><div><strong>Compare your offers</strong><span>Several lenders come back at once. Choose on total cost, not headline rate.</span></div></li>
-        </ol>
-        <button class="btn btn-primary btn-block" data-open-apply>Start my application</button>
-      </aside>
+      <div class="hero-art">
+        <img src="assets/brand/hero-illustration.svg" width="640" height="560"
+             alt="A phone showing an approved instant loan beside a stack of banknotes">
+      </div>
     </div>
   </section>
 
