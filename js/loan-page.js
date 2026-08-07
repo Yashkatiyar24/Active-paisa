@@ -758,101 +758,6 @@ var APLoan = (function () {
       });
     });
 
-    /* ---- offers panel (only products that return offers) ---- */
-    var offersIndex = -1;
-    if (p.offers) {
-      var op = el('section', 'flow-step');
-      op.hidden = true;
-      op.appendChild(el('h2', 'flow-title', 'Offers you qualify for'));
-      var osub = el('p', 'flow-sub', '');
-      osub.id = 'flowOffersSub';
-      op.appendChild(osub);
-      var ohost = el('div', 'offers');
-      ohost.id = 'flowOffers';
-      ohost.setAttribute('aria-live', 'polite');
-      op.appendChild(ohost);
-      card.appendChild(op);
-      panels.push(op);
-      panelIds.push('offers');
-      offersIndex = panels.length - 1;
-    }
-
-    function skeleton() {
-      var sk = el('div', 'skeleton');
-      sk.appendChild(el('div', 'sk-line w-60'));
-      sk.appendChild(el('div', 'sk-line w-40'));
-      sk.appendChild(el('div', 'sk-line tall'));
-      return sk;
-    }
-
-    /* Illustrative sizing from declared income, clamped to the lender ceiling. */
-    function amountFor(offer) {
-      var income = parseInt(C.digitsOnly(state.data.income || '0'), 10);
-      var raw = income * offer.multiple;
-      return Math.max(50000, Math.min(Math.floor(raw / 50000) * 50000, offer.cap));
-    }
-
-    function offerCard(offer) {
-      var amount = amountFor(offer);
-      var monthly = C.emi(amount, offer.rate, offer.tenure);
-
-      var cardEl = el('article', 'offer');
-      var head = el('div', 'offer-head');
-      var mark = el('span', 'offer-badge');
-      mark.appendChild(C.img(offer.logo, '', 30));
-      head.appendChild(mark);
-      var titles = el('div');
-      titles.appendChild(el('div', 'offer-name', offer.name));
-      titles.appendChild(el('div', 'offer-tag', offer.tag));
-      head.appendChild(titles);
-      head.appendChild(el('span', 'offer-pill', offer.pill));
-      cardEl.appendChild(head);
-
-      var figures = el('dl', 'offer-figures');
-      [['Loan amount', C.money(amount)],
-       ['Interest rate', offer.rate.toFixed(2) + '% p.a.'],
-       ['EMI', C.money(monthly) + '/mo']].forEach(function (pair) {
-        var box = el('div');
-        box.appendChild(el('dt', null, pair[0]));
-        box.appendChild(el('dd', null, pair[1]));
-        figures.appendChild(box);
-      });
-      cardEl.appendChild(figures);
-
-      var apply = el('button', 'btn btn-primary btn-block', 'Apply');
-      apply.type = 'button';
-      apply.setAttribute('aria-label', 'Apply for ' + C.money(amount) + ' from ' + offer.name);
-      apply.addEventListener('click', function () {
-        C.withLoading(apply, SUBMIT_MS, function () {
-          $('#flowDoneSub').textContent =
-            'Your request for ' + C.money(amount) + ' from ' + offer.name + ' at ' +
-            offer.rate.toFixed(2) + '% p.a. — ' + C.money(monthly) + ' a month across ' +
-            offer.tenure + ' months — is with the lender. They will be in touch shortly.';
-          stampReference();
-          goTo(panels.length - 1);
-          C.toast('Application submitted.', 'success');
-        });
-      });
-      cardEl.appendChild(apply);
-      return cardEl;
-    }
-
-    function loadOffers() {
-      var host = $('#flowOffers');
-      host.textContent = '';
-      $('#flowOffersSub').textContent = 'Matching you with lenders…';
-      for (var n = 0; n < p.offers.length; n++) host.appendChild(skeleton());
-
-      // TODO: replace with the live offers request
-      setTimeout(function () {
-        host.textContent = '';
-        p.offers.forEach(function (o) { host.appendChild(offerCard(o)); });
-        $('#flowOffersSub').textContent =
-          p.offers.length + ' lenders have pre-approved you. Pick whichever suits you.';
-        C.toast(p.offers.length + ' offers are ready for you.', 'success');
-      }, OFFER_MS);
-    }
-
     /* ---- success panel ---- */
     var done = el('section', 'flow-step flow-done');
     done.hidden = true;
@@ -885,9 +790,9 @@ var APLoan = (function () {
     done.appendChild(sub);
 
     var next = el('ol', 'done-next');
-    [['Verification call', 'A partner lender confirms your details and documents.'],
-     ['Sanction letter', 'Read the rate, processing fee and total repayment before accepting.'],
-     ['Disbursal', 'Funds reach your account once the lender completes its checks.']
+    [['We call you', 'An agent confirms your details and answers anything you want to ask.'],
+     ['We match you to lenders', 'Your application goes to the partners most likely to approve it.'],
+     ['Sanction and disbursal', 'Read the rate, fee and total repayment in the sanction letter before accepting.']
     ].forEach(function (row, i) {
       var li = el('li');
       li.appendChild(el('span', 'n', String(i + 1)));
@@ -913,6 +818,14 @@ var APLoan = (function () {
     card.appendChild(done);
     panels.push(done);
     panelIds.push('done');
+
+    function finish() {
+      $('#flowDoneSub').textContent =
+        'We have your ' + p.name.toLowerCase() + ' request. There is nothing more to do right now.';
+      stampReference();
+      goTo(panels.length - 1);
+      C.toast('Application submitted.', 'success');
+    }
 
     /* Short, human-readable handle for the applicant to quote on the phone. */
     function stampReference() {
@@ -1045,26 +958,15 @@ var APLoan = (function () {
       }
 
       if (step.id === 'review') {
-        return C.withLoading(button, SUBMIT_MS, function () {
-          if (offersIndex > -1) {
-            goTo(offersIndex);
-            loadOffers();
-            return;
-          }
-          $('#flowDoneSub').textContent =
-            'Your ' + p.name.toLowerCase() + ' application is with our team. Here is what happens next.';
-          stampReference();
-          goTo(panels.length - 1);
-          C.toast('Application submitted.', 'success');
-        });
+        return C.withLoading(button, SUBMIT_MS, finish);
       }
 
       if (!validateStep(form, step.fields)) return;
       step.fields.forEach(function (f) { state.data[f.name] = readValue(form, f); });
       C.withLoading(button, SUBMIT_MS, function () {
-        goTo(index + 1);
-        // on a short flow the last form step lands straight on the offers panel
-        if (index + 1 === offersIndex) loadOffers();
+        var next = index + 1;
+        if (next === panels.length - 1) finish();   // last form step -> confirmation
+        else goTo(next);
       });
     }
 

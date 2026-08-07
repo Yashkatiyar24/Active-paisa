@@ -26,7 +26,7 @@ var APProducts = (function () {
     review:   { id: 'review',   label: 'Review',    title: 'Review and submit',
                 sub: 'Check everything before it goes to the lender.' },
 
-    /* short flow: identity and income only, then straight to offers */
+    /* short flow: identity and income, then a confirmation — no offers shown */
     basic:    { id: 'basic',    label: 'Basic Details',
                 title: 'A few details to find your best offer', sub: '' },
     income:   { id: 'income',   label: 'Income Details', title: 'Income details',
@@ -234,10 +234,10 @@ var APProducts = (function () {
     id: 'personal',
     slug: 'index',
     name: 'Personal Loan',
-    /* mobile and OTP sit ahead of the stepper; offers is its final node */
+    /* mobile and OTP sit ahead of the stepper; confirmation is its final node */
     flow: ['mobile', 'otp', 'basic', 'income'],
-    stepper: ['Basic Details', 'Income Details', 'Approved Offer'],
-    stepperNode: { basic: 0, income: 1, offers: 2 },
+    stepper: ['Basic Details', 'Income Details', 'Confirmation'],
+    stepperNode: { basic: 0, income: 1, done: 2 },
     calc: { min: 50000, max: 5000000, step: 25000, start: 800000,
             rateMin: 9.99, rateMax: 24, rate: 12.5,
             tenureMin: 12, tenureMax: 60, tenure: 36 },
@@ -255,18 +255,6 @@ var APProducts = (function () {
       { name: 'company',    label: 'Company Name*', type: 'text', rule: 'org', span: 2 },
       { name: 'income',     label: 'Monthly Income*', type: 'money', rule: 'income', span: 2 },
       { name: 'household',  label: 'Annual Household Income*', type: 'money', rule: 'household', span: 2 }
-    ],
-    /* Personal loan is the one product that returns offers before submitting. */
-    offers: [
-      { id: 'bp1', name: 'Bank Partner 1', tag: 'NBFC · Personal Loan',
-        logo: 'assets/brand/partners/p1.svg',
-        rate: 10.99, tenure: 36, multiple: 12, cap: 1500000, pill: 'Lowest EMI' },
-      { id: 'bp2', name: 'Bank Partner 2', tag: 'Bank · Personal Loan',
-        logo: 'assets/brand/partners/p2.svg',
-        rate: 12.50, tenure: 24, multiple: 15, cap: 2000000, pill: 'Instant disbursal' },
-      { id: 'bp3', name: 'Bank Partner 3', tag: 'NBFC · Personal Loan',
-        logo: 'assets/brand/partners/p3.svg',
-        rate: 14.25, tenure: 48, multiple: 18, cap: 1000000, pill: 'Highest amount' }
     ],
     compare: [
       { name: '12 months', tenure: 12, rate: 10.99, note: 'Least interest, largest instalment' },

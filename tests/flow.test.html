@@ -258,37 +258,21 @@
         d1.checked = true; fire(d1, 'change');
         d2.checked = true; fire(d2, 'change');
 
-        /* 5. offers */
+        /* 5. confirmation — no lender offers are shown */
         submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 'offers'; });
-        ok(true, 'Get Offer Now reaches the offers screen');
-        ok(d.querySelectorAll('#flowOffers .skeleton').length === 3,
-           'shows a skeleton loader per offer while fetching');
-
-        var cards = await waitFor(function () {
-          var c = d.querySelectorAll('#flowOffers .offer');
-          return c.length === 3 ? c : null;
-        });
-        ok(true, 'renders 3 partner offers');
-        ok(d.querySelectorAll('#flowOffers .offer-badge img').length === 3,
-           'offer cards carry the lender marks');
-
-        var figures = cards[0].querySelectorAll('.offer-figures dd');
-        var amount = money(figures[0].textContent);
-        var emi = money(figures[2].textContent);
-        // income 3,00,000 x 12 = 36,00,000, clamped to partner 1 ceiling of 15,00,000
-        ok(amount === 1500000, 'clamps offer 1 to the partner ceiling (' + amount + ')');
-        ok(emi > 48000 && emi < 50500, 'offer EMI is arithmetically correct (' + emi + ')');
-
-        cards[0].querySelector('button').click();
         await waitFor(function () { return visibleStep(d) === 'done'; });
-        ok(true, 'accepting an offer reaches the success screen');
-        ok(d.querySelector('#flowDoneSub').textContent.indexOf('Bank Partner 1') > -1,
-           'success message names the chosen lender');
-
-        /* ---- progress ---- */
+        ok(true, 'Get Offer Now reaches the confirmation screen');
+        ok(d.querySelector('#flowOffers') === null, 'no lender offers are displayed');
+        ok(d.querySelector('.done-callout strong').textContent
+             .indexOf('agent will call you within 24 hours') > -1,
+           'confirmation leads with the 24-hour callback promise');
+        ok(d.querySelectorAll('.done-next li').length === 3, 'confirmation lists what happens next');
+        ok(/^AP-\d{4}-/.test(d.querySelector('#flowRef').textContent),
+           'confirmation shows a reference code (' + d.querySelector('#flowRef').textContent + ')');
         ok(d.querySelectorAll('.stepper li')[2].classList.contains('is-current'),
-           'stepper marks Approved Offer as current on the offers screen');
+           'stepper marks the final node as current');
+        ok(d.querySelector('.stepper li:last-child').textContent.indexOf('Approved Offer') === -1,
+           'final stepper node does not claim an offer was approved');
 
         /* ---- brand and placeholder guards ---- */
         var html = d.documentElement.outerHTML.toLowerCase();
