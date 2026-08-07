@@ -238,6 +238,8 @@
         set(d, '[name="income"]', '300000');
         ok(d.querySelector('[name="income"]').value === '3,00,000',
            'money fields use Indian digit grouping');
+        ok(d.querySelector('[name="household"]').value === '36,00,000',
+           'annual household income derives from monthly income (x12)');
 
         set(d, '[name="household"]', '200000');
         submitStep(d);

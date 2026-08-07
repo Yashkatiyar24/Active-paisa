@@ -409,6 +409,30 @@ var APLoan = (function () {
     });
   }
 
+  /* Annual household income starts as monthly x 12. A household can earn more
+     than the applicant, so it stays editable — and once it is edited by hand we
+     stop overwriting it. Programmatic assignment does not fire 'input', so the
+     flag only trips on real typing. */
+  function deriveHousehold(form) {
+    var income = $('[name="income"]', form);
+    var household = $('[name="household"]', form);
+    if (!income || !household) return;
+    var editedByHand = false;
+
+    household.addEventListener('input', function () { editedByHand = true; });
+
+    income.addEventListener('input', function () {
+      if (editedByHand) return;
+      var monthly = parseInt(C.digitsOnly(income.value), 10);
+      household.value = monthly ? C.inr.format(monthly * 12) : '';
+      var field = C.fieldOf(household);
+      if (field && field.classList.contains('has-error')) {
+        var msg = RULES.household(household.value, household, {});
+        if (msg) C.setError(household, msg); else C.clearError(household);
+      }
+    });
+  }
+
   /* ==========================================================================
      Document upload — drag, drop or browse. Files stay in memory.
      ========================================================================== */
@@ -726,6 +750,7 @@ var APLoan = (function () {
         ]);
       }
       if (step.fields && step.fields.length) bindLive(form, step.fields);
+      deriveHousehold(form);
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
