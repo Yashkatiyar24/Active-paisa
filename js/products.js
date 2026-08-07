@@ -24,7 +24,13 @@ var APProducts = (function () {
     documents:{ id: 'documents',label: 'Documents', title: 'Upload documents',
                 sub: 'Clear photos or PDFs, up to 5 MB each.' },
     review:   { id: 'review',   label: 'Review',    title: 'Review and submit',
-                sub: 'Check everything before it goes to the lender.' }
+                sub: 'Check everything before it goes to the lender.' },
+
+    /* short flow: identity and income only, then straight to offers */
+    basic:    { id: 'basic',    label: 'Basic Details',
+                title: 'A few details to find your best offer', sub: '' },
+    income:   { id: 'income',   label: 'Income Details', title: 'Income details',
+                sub: '', quietTitle: true }
   };
 
   var ORDER = ['mobile', 'otp', 'personal', 'address', 'profile', 'loan', 'documents', 'review'];
@@ -38,6 +44,17 @@ var APProducts = (function () {
       { name: 'email',    label: 'Email address',         type: 'email', rule: 'email' },
       { name: 'gender',   label: 'Gender',                type: 'choice', rule: 'required',
         options: ['Male', 'Female', 'Other'] }
+    ];
+  }
+
+  function basicFields() {
+    return [
+      { name: 'gender',  label: 'Gender', type: 'choice', rule: 'required', span: 2,
+        options: ['Male', 'Female'] },
+      { name: 'email',   label: 'Email Address*', type: 'email', rule: 'email', span: 2 },
+      { name: 'dob',     label: 'DOB (DD/MM/YYYY)*', type: 'date', rule: 'dob', span: 2 },
+      { name: 'pincode', label: 'Pincode*', type: 'pincode', rule: 'pincode', span: 2 },
+      { name: 'pan',     label: 'PAN*', type: 'pan', rule: 'pan', span: 2 }
     ];
   }
 
@@ -217,6 +234,10 @@ var APProducts = (function () {
     id: 'personal',
     slug: 'index',
     name: 'Personal Loan',
+    /* mobile and OTP sit ahead of the stepper; offers is its final node */
+    flow: ['mobile', 'otp', 'basic', 'income'],
+    stepper: ['Basic Details', 'Income Details', 'Approved Offer'],
+    stepperNode: { basic: 0, income: 1, offers: 2 },
     calc: { min: 50000, max: 5000000, step: 25000, start: 800000,
             rateMin: 9.99, rateMax: 24, rate: 12.5,
             tenureMin: 12, tenureMax: 60, tenure: 36 },
@@ -228,12 +249,12 @@ var APProducts = (function () {
       { id: 'salary', label: 'Salary slips',     hint: 'Your last 3 months' },
       { id: 'bank',   label: 'Bank statements',  hint: 'Last 6 months of your salary account' }
     ],
-    profileFields: [
-      { name: 'employment', label: 'Employment type', type: 'choice', rule: 'required', span: 2,
+    incomeFields: [
+      { name: 'employment', label: 'How you earn', type: 'choice', rule: 'required', span: 2,
         options: ['Salaried', 'Self-employed'] },
-      { name: 'company',    label: 'Employer or business name', type: 'text', rule: 'org', span: 2 },
-      { name: 'income',     label: 'Net monthly income', type: 'money', rule: 'income' },
-      { name: 'household',  label: 'Annual household income', type: 'money', rule: 'household' }
+      { name: 'company',    label: 'Company Name*', type: 'text', rule: 'org', span: 2 },
+      { name: 'income',     label: 'Monthly Income*', type: 'money', rule: 'income', span: 2 },
+      { name: 'household',  label: 'Annual Household Income*', type: 'money', rule: 'household', span: 2 }
     ],
     /* Personal loan is the one product that returns offers before submitting. */
     offers: [
@@ -254,14 +275,24 @@ var APProducts = (function () {
     ]
   };
 
-  /* Assemble the step list for a product. */
+  /* Assemble the step list for a product. `flow` overrides the default order. */
   function stepsFor(product) {
-    return ORDER.map(function (id) {
+    return (product.flow || ORDER).map(function (id) {
       var base = STEP_LIBRARY[id];
       var step = { id: base.id, label: base.label, title: base.title, sub: base.sub, fields: [] };
+      step.quietTitle = !!base.quietTitle;
       if (id === 'personal') step.fields = personalFields();
+      if (id === 'basic') {
+        step.fields = basicFields();
+        step.submitLabel = 'Proceed';
+      }
       if (id === 'address')  step.fields = addressFields();
       if (id === 'profile')  step.fields = product.profileFields.slice();
+      if (id === 'income') {
+        step.fields = product.incomeFields.slice();
+        step.declarations = true;      // residency and restricted-industry
+        step.submitLabel = 'Get Offer Now';
+      }
       if (id === 'loan') {
         step.fields = [
           { name: 'amount', label: 'Amount required', type: 'money', rule: 'amount' },

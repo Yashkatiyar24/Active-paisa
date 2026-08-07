@@ -340,6 +340,9 @@ var APLoan = (function () {
       if (own && n < own * 12) return 'Household income cannot be below your own annual income.';
       return '';
     },
+    mustCheck: function (v) {
+      return v ? '' : 'Please confirm this declaration to continue.';
+    },
     obligationsOptional: function () { return ''; },
     gstinOptional: function (v) {
       if (!v) return '';
@@ -349,6 +352,11 @@ var APLoan = (function () {
   };
 
   function readValue(form, f) {
+    if (f.type === 'checkbox') {
+      // .value is "on" whether or not it is ticked, so read the state
+      var box = $('[name="' + f.name + '"]', form);
+      return box && box.checked ? 'yes' : '';
+    }
     if (f.type === 'choice') {
       var picked = $('input[name="' + f.name + '"]:checked', form);
       return picked ? picked.value : '';
@@ -516,20 +524,58 @@ var APLoan = (function () {
     var landing = [$('.site-header'), $('#main'), $('.site-footer')];
     var panels = [];
 
-    /* ---- progress ---- */
-    var barFill = $('#flowFill');
-    var barList = $('#flowSteps');
+    /* ---- progress ----
+       Products that declare `stepper` get the node-and-line indicator; the rest
+       keep the thin bar, which copes with a longer step list. */
+    var progressHost = $('#flowProgress');
+    var panelIds = [];
+    var useNodes = !!p.stepper;
+    var nodeList = null;
+
+    if (useNodes) {
+      progressHost.textContent = '';
+      var shell = el('div', 'stepper-shell');
+      nodeList = el('ol', 'stepper');
+      p.stepper.forEach(function (label) {
+        var li = el('li');
+        var node = el('span', 'node');
+        node.appendChild(C.svg('0 0 24 24', [{
+          d: 'M5 12.5l4.5 4.5L19 7.5', fill: 'none', stroke: '#fff',
+          'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+        }]));
+        li.appendChild(node);
+        li.appendChild(el('span', null, label));
+        nodeList.appendChild(li);
+      });
+      shell.appendChild(nodeList);
+      progressHost.appendChild(shell);
+    }
+
+    var barFill = useNodes ? null : $('#flowFill');
+    var barList = useNodes ? null : $('#flowSteps');
     var labels = [];
-    steps.forEach(function (s) {
-      if (labels.indexOf(s.label) === -1) labels.push(s.label);
-    });
-    labels.forEach(function (label) { barList.appendChild(el('li', null, label)); });
+    if (!useNodes) {
+      steps.forEach(function (s) {
+        if (labels.indexOf(s.label) === -1) labels.push(s.label);
+      });
+      labels.forEach(function (label) { barList.appendChild(el('li', null, label)); });
+    }
 
     function paintProgress() {
+      if (useNodes) {
+        var id = panelIds[state.step];
+        var node = p.stepperNode[id];
+        $$('li', nodeList).forEach(function (li, i) {
+          li.classList.toggle('is-done', i < node);
+          li.classList.toggle('is-current', i === node);
+          if (i === node) li.setAttribute('aria-current', 'step');
+          else li.removeAttribute('aria-current');
+        });
+        return;
+      }
       var current = steps[Math.min(state.step, steps.length - 1)];
       var idx = labels.indexOf(current.label);
-      var pct = ((idx + 1) / labels.length) * 100;
-      barFill.style.width = pct + '%';
+      barFill.style.width = ((idx + 1) / labels.length * 100) + '%';
       $('#flowBar').setAttribute('aria-valuenow', String(idx + 1));
       $$('li', barList).forEach(function (li, i) {
         li.classList.toggle('is-done', i < idx);
@@ -540,8 +586,9 @@ var APLoan = (function () {
     function goTo(i) {
       state.step = i;
       panels.forEach(function (panel, n) { panel.hidden = n !== i; });
-      $('#flowProgress').hidden = i >= steps.length;
-      if (i < steps.length) paintProgress();
+      var onNode = useNodes ? p.stepperNode[panelIds[i]] !== undefined : i < steps.length;
+      progressHost.hidden = !onNode;
+      if (onNode) paintProgress();
       var active = panels[i];
       var focusable = active && ($('input:not([type=hidden]):not(.sr-only)', active) || $('button', active));
       if (focusable) focusable.focus({ preventScroll: true });
@@ -554,8 +601,8 @@ var APLoan = (function () {
       panel.hidden = i !== 0;
       panel.dataset.step = String(i);
 
-      panel.appendChild(el('h2', 'flow-title', step.title));
-      panel.appendChild(el('p', 'flow-sub', step.sub));
+      panel.appendChild(el('h2', step.quietTitle ? 'sr-only' : 'flow-title', step.title));
+      if (step.sub) panel.appendChild(el('p', 'flow-sub', step.sub));
 
       var form = el('form');
       form.noValidate = true;
@@ -632,6 +679,26 @@ var APLoan = (function () {
         form.appendChild(grid2);
       }
 
+      if (step.declarations) {
+        var decls = el('div', 'declarations');
+        [['declResident',
+          'I accept the Privacy Policy and Terms and Conditions of Activ Paisa and its Partners, ' +
+          'and declare that I reside in India and am not a politically exposed person.'],
+         ['declIndustry',
+          'I declare that neither my employer\u2019s industry nor my own role appears on the ' +
+          'restricted list.']
+        ].forEach(function (pair) {
+          var row = el('div', 'field consent-row');
+          var box = el('input');
+          box.type = 'checkbox'; box.id = 'f_' + pair[0]; box.name = pair[0]; box.className = 'tick-box';
+          var lab = el('label', null, pair[1]);
+          lab.htmlFor = box.id;
+          row.appendChild(box); row.appendChild(lab); row.appendChild(el('p', 'error'));
+          decls.appendChild(row);
+        });
+        form.appendChild(decls);
+      }
+
       var actions = el('div', 'actions actions-center');
       if (i > 0) {
         var back = el('button', 'btn btn-ghost', 'Back');
@@ -640,8 +707,9 @@ var APLoan = (function () {
         actions.appendChild(back);
       }
       var next = el('button', 'btn btn-primary btn-wide',
+        step.submitLabel ? step.submitLabel :
         step.id === 'review' ? 'Submit application' :
-        step.id === 'otp' ? 'Verify' : 'Continue');
+        step.id === 'otp' ? 'Verify OTP' : 'Continue');
       next.type = 'submit';
       actions.appendChild(next);
       form.appendChild(actions);
@@ -649,7 +717,14 @@ var APLoan = (function () {
       panel.appendChild(form);
       card.appendChild(panel);
       panels.push(panel);
+      panelIds.push(step.id);
 
+      if (step.declarations) {
+        step.fields = step.fields.concat([
+          { name: 'declResident', type: 'checkbox', rule: 'mustCheck', label: 'this declaration' },
+          { name: 'declIndustry', type: 'checkbox', rule: 'mustCheck', label: 'this declaration' }
+        ]);
+      }
       if (step.fields && step.fields.length) bindLive(form, step.fields);
 
       form.addEventListener('submit', function (e) {
@@ -673,6 +748,7 @@ var APLoan = (function () {
       op.appendChild(ohost);
       card.appendChild(op);
       panels.push(op);
+      panelIds.push('offers');
       offersIndex = panels.length - 1;
     }
 
@@ -774,8 +850,8 @@ var APLoan = (function () {
     ], 20));
     callout.appendChild(ring);
     var calloutText = el('div');
-    calloutText.appendChild(el('strong', null, 'We will contact you within 24 hours'));
-    calloutText.appendChild(el('span', null, 'On the mobile number you verified'));
+    calloutText.appendChild(el('strong', null, 'Our agent will call you within 24 hours'));
+    calloutText.appendChild(el('span', null, 'On the mobile number you just verified'));
     callout.appendChild(calloutText);
     done.appendChild(callout);
 
@@ -811,6 +887,7 @@ var APLoan = (function () {
     done.appendChild(again);
     card.appendChild(done);
     panels.push(done);
+    panelIds.push('done');
 
     /* Short, human-readable handle for the applicant to quote on the phone. */
     function stampReference() {
@@ -959,7 +1036,11 @@ var APLoan = (function () {
 
       if (!validateStep(form, step.fields)) return;
       step.fields.forEach(function (f) { state.data[f.name] = readValue(form, f); });
-      C.withLoading(button, SUBMIT_MS, function () { goTo(index + 1); });
+      C.withLoading(button, SUBMIT_MS, function () {
+        goTo(index + 1);
+        // on a short flow the last form step lands straight on the offers panel
+        if (index + 1 === offersIndex) loadOffers();
+      });
     }
 
     /* ---- view toggle ---- */

@@ -191,41 +191,42 @@
         await waitFor(function () { return visibleStep(d) === 2; });
         ok(true, 'a complete OTP advances to personal details');
 
-        /* 3. personal */
+        /* 3. basic details */
+        ok(d.querySelectorAll('.stepper li').length === 3, 'three-node stepper appears');
+        ok(d.querySelectorAll('.stepper li')[0].classList.contains('is-current'),
+           'stepper marks Basic Details as current');
+
         set(d, '[name="pan"]', 'BADPAN');
         submitStep(d);
         await wait(80);
         ok(d.querySelector('[name="pan"]').closest('.field').classList.contains('has-error'),
            'rejects a malformed PAN');
+        ok(visibleStep(d) === 2, 'does not advance on invalid basic details');
+
         set(d, '[name="email"]', 'not-an-email');
         await wait(60);
         ok(d.querySelector('[name="email"]').closest('.field').classList.contains('has-error'),
            'rejects a malformed email');
 
-        set(d, '[name="fullName"]', 'Anita Sharma');
-        set(d, '[name="dob"]', '1990-04-12');
-        set(d, '[name="pan"]', 'ABCDE1234F');
-        set(d, '[name="email"]', 'anita@example.com');
-        pick(d, 'gender', 'Female');
-        submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 3; });
-        ok(true, 'advances to address');
-
-        /* 4. address */
         set(d, '[name="pincode"]', '012345');
-        submitStep(d);
-        await wait(80);
+        await wait(60);
         ok(d.querySelector('[name="pincode"]').closest('.field').classList.contains('has-error'),
            'rejects a pincode starting with zero');
-        set(d, '[name="addressLine"]', '14 Nehru Road');
-        set(d, '[name="city"]', 'Pune');
-        set(d, '[name="pincode"]', '411001');
-        pick(d, 'residence', 'Owned');
-        submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 4; });
-        ok(true, 'advances to employment and income');
 
-        /* 5. profile */
+        pick(d, 'gender', 'Female');
+        set(d, '[name="email"]', 'anita@example.com');
+        set(d, '[name="dob"]', '1990-04-12');
+        set(d, '[name="pincode"]', '411001');
+        set(d, '[name="pan"]', 'ABCDE1234F');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 3; });
+        ok(true, 'advances to income details');
+        ok(d.querySelectorAll('.stepper li')[0].classList.contains('is-done'),
+           'stepper marks Basic Details as done');
+        ok(d.querySelectorAll('.stepper li')[1].classList.contains('is-current'),
+           'stepper marks Income Details as current');
+
+        /* 4. income details */
         set(d, '[name="income"]', '10000');
         submitStep(d);
         await wait(80);
@@ -246,56 +247,19 @@
 
         set(d, '[name="household"]', '5000000');
         submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 5; });
-        ok(true, 'advances to loan requirement');
-
-        /* 6. loan */
-        set(d, '[name="amount"]', '10000');
-        submitStep(d);
         await wait(80);
-        ok(d.querySelector('[name="amount"]').closest('.field').classList.contains('has-error'),
-           'rejects an amount below the product minimum');
-        set(d, '[name="amount"]', '800000');
-        choose(d, 'tenure', '36 months');
-        submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 6; });
-        ok(true, 'advances to documents');
+        ok(d.querySelector('#f_declResident').closest('.field').classList.contains('has-error'),
+           'requires the residency declaration');
+        ok(visibleStep(d) === 3, 'does not advance without the declarations');
 
-        /* 7. documents */
-        ok(d.querySelectorAll('.drop').length === 4, 'renders a drop zone per required document');
-        var input = d.querySelector('#file_bank');
-        var dt = new w.DataTransfer();
-        dt.items.add(new w.File(['x'], 'statement.pdf', { type: 'application/pdf' }));
-        input.files = dt.files;
-        fire(input, 'change');
-        await wait(80);
-        ok(input.closest('.drop').classList.contains('is-filled'),
-           'accepting a PDF marks the zone filled');
+        var d1 = d.querySelector('#f_declResident'), d2 = d.querySelector('#f_declIndustry');
+        d1.checked = true; fire(d1, 'change');
+        d2.checked = true; fire(d2, 'change');
 
-        var bad = d.querySelector('#file_pan');
-        var dt2 = new w.DataTransfer();
-        dt2.items.add(new w.File(['x'], 'notes.txt', { type: 'text/plain' }));
-        bad.files = dt2.files;
-        fire(bad, 'change');
-        await wait(80);
-        ok(bad.closest('.drop').classList.contains('has-error'),
-           'rejects a file type outside JPG, PNG and PDF');
-
-        submitStep(d);
-        await waitFor(function () { return visibleStep(d) === 7; });
-        ok(true, 'advances to review');
-
-        /* 8. review */
-        var review = d.querySelector('#flowReview').textContent;
-        ok(review.indexOf('Anita Sharma') > -1, 'review shows the name entered earlier');
-        ok(review.indexOf('411001') > -1, 'review shows the address');
-        ok(review.indexOf('statement.pdf') > -1, 'review lists the attached document');
-        ok(review.indexOf('8,00,000') > -1, 'review formats the loan amount as money');
-
-        /* 9. offers — unique to the personal loan product */
+        /* 5. offers */
         submitStep(d);
         await waitFor(function () { return visibleStep(d) === 'offers'; });
-        ok(true, 'submitting review reaches the offers screen');
+        ok(true, 'Get Offer Now reaches the offers screen');
         ok(d.querySelectorAll('#flowOffers .skeleton').length === 3,
            'shows a skeleton loader per offer while fetching');
 
@@ -321,8 +285,8 @@
            'success message names the chosen lender');
 
         /* ---- progress ---- */
-        ok(d.querySelectorAll('#flowSteps li').length === 7,
-           'progress bar lists each stage once (' + d.querySelectorAll('#flowSteps li').length + ')');
+        ok(d.querySelectorAll('.stepper li')[2].classList.contains('is-current'),
+           'stepper marks Approved Offer as current on the offers screen');
 
         /* ---- brand and placeholder guards ---- */
         var html = d.documentElement.outerHTML.toLowerCase();

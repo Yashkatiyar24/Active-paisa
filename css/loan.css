@@ -335,6 +335,9 @@ body.is-applying .sticky-cta { display: none; }
   to   { opacity: 1; transform: none; }
 }
 .flow-title { font-size: clamp(1.25rem, 2.6vw, 1.55rem); margin-bottom: 6px; }
+/* steps with no sub-line would otherwise run straight into the first field */
+.flow-step .form-grid { margin-top: 22px; }
+.flow-step .form-grid legend { margin-bottom: 10px; }
 .flow-sub { font-size: .93rem; color: var(--ink-2); margin-bottom: 28px; }
 .flow-done { text-align: center; padding-top: 20px; }
 .flow-done .flow-sub { max-width: 34rem; margin-inline: auto; }
