@@ -16,7 +16,7 @@ SERVER=$!
 trap 'kill $SERVER 2>/dev/null || true' EXIT
 sleep 1
 
-"$CHROME" --headless=new --disable-gpu --virtual-time-budget=25000 \
+"$CHROME" --headless=new --disable-gpu --virtual-time-budget=60000 \
   --dump-dom "http://localhost:$PORT/tests/flow.test.html" 2>/dev/null \
 | python3 -c '
 import sys, re, html

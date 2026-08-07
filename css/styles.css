@@ -280,125 +280,149 @@ ul, ol { list-style: none; padding: 0; }
 }
 
 /* ==========================================================================
-   Carousel (native scroll-snap)
+   Carousel
    ========================================================================== */
 .carousel { position: relative; }
 
+.car-head { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+.car-pause {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 8px;
+  color: var(--ink-2); fill: currentColor;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.car-pause:hover { background: var(--surface-alt); color: var(--ink); }
+.car-pause .ic-play { display: none; }
+.carousel.is-paused .car-pause .ic-pause { display: none; }
+.carousel.is-paused .car-pause .ic-play { display: block; }
+
 .car-track {
-  display: flex; gap: 20px;
-  overflow-x: auto; scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  padding: 4px 2px 18px;
+  display: flex; gap: 0;
+  overflow-x: auto; scroll-behavior: smooth;
+  padding: 0; margin: 0;
   scrollbar-width: none;
 }
 .car-track::-webkit-scrollbar { display: none; }
-.car-track > * { scroll-snap-align: start; flex: 0 0 clamp(250px, 27%, 300px); }
+.car-track > * { flex: 0 0 clamp(240px, 25%, 300px); }
+
 
 .car-btn {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
   display: grid; place-items: center;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: var(--surface); color: var(--ink);
-  border: 1px solid var(--line); box-shadow: var(--sh-md);
-  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease),
-              border-color var(--dur) var(--ease);
+  width: 46px; height: 46px; border-radius: 10px;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line); box-shadow: var(--sh-sm);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
 }
-.car-btn:hover { color: var(--primary); border-color: var(--primary); }
-.car-btn.prev { left: -14px; }
-.car-btn.next { right: -14px; }
-.car-btn[disabled] { opacity: .32; pointer-events: none; }
+.car-btn:hover { color: var(--primary); border-color: var(--primary); box-shadow: var(--sh-md); }
+.car-btn.prev { left: -23px; }
+.car-btn.next { right: -23px; }
 
 /* ==========================================================================
-   Partner cards
+   Partner / DLA cards — divided columns, no card chrome (matches reference)
    ========================================================================== */
 .partner-card, .dla-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: 26px 22px;
+  display: flex; flex-direction: column; align-items: center;
   text-align: center;
-  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  padding: 30px 22px 26px;
+  border-right: 1px solid var(--line);
+  background: transparent;
 }
-.partner-card:hover, .dla-card:hover { transform: translateY(-3px); box-shadow: var(--sh-lg); }
+.car-track > .partner-card:last-child { border-right: 0; }
 
 .p-logo {
-  width: 56px; height: 56px; margin: 0 auto 16px;
+  width: 58px; height: 58px; margin-bottom: 18px;
   border-radius: 14px; background: var(--grad);
   display: grid; place-items: center;
   color: #fff; font-weight: 700; font-size: 1.05rem;
 }
-.p-name { font-size: 1rem; margin-bottom: 12px; }
+.p-name { font-size: .98rem; margin-bottom: 16px; min-height: 2.4em; display: flex; align-items: center; }
 .p-tag {
-  display: inline-block; font-size: .74rem; font-weight: 600;
-  color: var(--success); background: var(--success-bg);
-  padding: 4px 12px; border-radius: 6px; margin-bottom: 16px;
+  display: inline-block; font-size: .76rem; font-weight: 500;
+  color: var(--secondary); background: var(--tint);
+  padding: 5px 14px; border-radius: 6px; margin-bottom: 18px;
 }
-.p-block { font-size: .82rem; color: var(--ink-2); line-height: 1.7; }
+.p-block { font-size: .84rem; color: var(--ink-2); line-height: 1.9; }
 .p-block .p-role { color: var(--ink-3); }
 .p-block strong { color: var(--ink); font-weight: 600; display: block; }
-.p-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; margin-top: 14px; }
-.p-links a { font-size: .82rem; text-decoration: underline; text-underline-offset: 2px; }
+.p-links {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 4px 0; margin-top: 16px;
+}
+.p-links a {
+  font-size: .84rem; text-decoration: underline; text-underline-offset: 3px;
+  padding: 0 12px; border-left: 1px solid var(--line); line-height: 1.1;
+}
+.p-links a:first-child { border-left: 0; }
 
 .dla-grid {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 280px));
-  gap: 20px; justify-content: center;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 270px));
+  gap: 0; justify-content: center;
 }
+.dla-card { border-right: 1px solid var(--line); }
+.dla-card:last-child { border-right: 0; }
+
+/* links bar beneath the partner carousel */
+.grievance-bar {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 8px 0;
+  background: var(--bg); border-radius: var(--r-sm);
+  padding: 16px 20px; margin-top: 26px;
+}
+.grievance-bar a {
+  font-size: .9rem; padding: 0 24px; line-height: 1.3;
+  border-left: 1px solid var(--line);
+}
+.grievance-bar a:first-child { border-left: 0; }
 
 .lead-disclaimer {
   font-size: .86rem; color: var(--ink-2); line-height: 1.7;
-  max-width: 940px; margin: 26px auto 0;
+  margin: 26px auto 0; padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
 }
 .lead-disclaimer strong { color: var(--ink); }
 
 .apr-note {
-  border-top: 1px solid var(--line);
-  margin-top: 26px; padding-top: 26px;
+  margin-top: 24px;
   display: grid; gap: 16px;
-  font-size: .86rem; color: var(--ink-2); line-height: 1.75;
+  font-size: .86rem; color: var(--ink-2); line-height: 1.85;
 }
 .apr-note strong { color: var(--ink); }
 
 /* ==========================================================================
-   Reviews
+   Reviews — quote glyph and rule sit above the card, as in the reference
    ========================================================================== */
+.carousel-cards .car-track { gap: 26px; padding: 34px 2px 6px; }
+.carousel-cards .car-track > * { flex: 0 0 clamp(280px, 44%, 480px); }
+
 .review-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  padding: 26px;
-  display: flex; flex-direction: column; gap: 18px;
-  min-height: 100%;
+  padding: 34px 28px 28px;
+  display: flex; flex-direction: column; gap: 22px;
 }
-.review-card blockquote { font-size: .92rem; color: var(--ink-2); flex: 1; }
-.review-card blockquote::before {
-  content: "\201C"; display: block;
-  font-size: 3rem; color: var(--primary); line-height: .1; margin-bottom: 18px;
+.quote-rule {
+  position: absolute; top: -30px; left: 26px; right: 26px;
+  display: flex; align-items: flex-start; gap: 14px;
+  pointer-events: none;
 }
+.quote-rule::before {
+  content: "\201C";
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 4.4rem; line-height: .72;
+  color: var(--primary);
+}
+/* sits against the glyph's optical middle — centring would drop it onto the card border */
+.quote-rule::after { content: ""; flex: 1; height: 1px; margin-top: 20px; background: #CBD5E1; }
+
+.review-card blockquote { font-size: .95rem; color: var(--ink-2); flex: 1; line-height: 1.75; }
 .review-author { display: flex; align-items: center; gap: 12px; }
-.review-author .p-logo { width: 38px; height: 38px; margin: 0; font-size: .82rem; border-radius: 50%; }
-.review-author strong { display: block; font-size: .9rem; }
-.review-author span { font-size: .78rem; color: var(--ink-3); }
-
-/* ==========================================================================
-   App download
-   ========================================================================== */
-.app-section { background: var(--bg); }
-.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-.app-copy h2 { font-size: clamp(1.35rem, 2.8vw, 1.85rem); line-height: 1.35; }
-.app-arrow { width: 100%; max-width: 340px; height: auto; margin: 10px 0 6px; opacity: .55; }
-
-.store-list { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 18px; }
-.store-badge {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 22px 12px 18px;
-  border: 1.5px solid var(--line); border-radius: 12px;
-  background: var(--surface); color: var(--ink);
-}
-.store-badge svg { flex-shrink: 0; color: var(--secondary); }
-.store-badge span { display: flex; flex-direction: column; font-weight: 700; line-height: 1.25; }
-.store-badge small { font-size: .7rem; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
-
-.app-art img { width: 100%; max-width: 420px; height: auto; margin-inline: auto; }
+.review-author .p-logo { width: 42px; height: 42px; margin: 0; font-size: .85rem; border-radius: 50%; }
+.review-author strong { display: block; font-size: .95rem; color: var(--ink); }
+.review-author span { font-size: .8rem; color: var(--ink-3); }
 
 /* ==========================================================================
    Support
@@ -830,7 +854,10 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
   }
   .header-nav.is-open a { padding: 12px 0; border-bottom: 1px solid var(--line); }
   .header-nav.is-open a:last-child { border-bottom: 0; }
-  .car-track > * { flex-basis: min(280px, 80vw); }
+  .car-track > * { flex-basis: min(270px, 78vw); }
+  .carousel-cards .car-track > * { flex-basis: min(360px, 84vw); }
+  .car-btn.prev { left: -8px; }
+  .car-btn.next { right: -8px; }
   .footer-grid { grid-template-columns: 1.6fr 1fr 1fr; gap: 30px; }
   .support-grid { grid-template-columns: 1fr; }
   .dla-grid { grid-template-columns: 1fr; max-width: 320px; margin-inline: auto; }
@@ -851,6 +878,10 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
   .actions-center .btn { width: 100%; min-width: 0; }
   .capture-card { padding: 24px 20px; }
   .rule-title { gap: 12px; white-space: normal; text-align: center; }
+  .dla-grid { grid-template-columns: 1fr; max-width: 300px; }
+  .dla-card { border-right: 0; border-bottom: 1px solid var(--line); }
+  .dla-card:last-child { border-bottom: 0; }
+  .grievance-bar a { border-left: 0; padding: 0 8px; }
   .footer-grid { grid-template-columns: 1fr; gap: 34px; }
   .btn-hero { width: 100%; padding: 20px 32px; }
   .toasts { right: 12px; left: 12px; bottom: 12px; max-width: none; }

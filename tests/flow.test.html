@@ -82,12 +82,46 @@
     (async function run() {
       try {
         /* ---- Landing page ---- */
-        ok(doc.querySelectorAll('#partnerTrack .partner-card').length === 6,
+        ok(doc.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])').length === 6,
            'renders 6 lending partner cards');
+        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 6,
+           'clones the partner track so the auto-scroll wraps seamlessly');
+        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden] a[tabindex="-1"]').length > 0,
+           'clones are taken out of the tab order');
         ok(doc.querySelectorAll('#dlaGrid .dla-card').length === 2,
            'renders 2 digital lending partner cards');
-        ok(doc.querySelectorAll('#reviewTrack .review-card').length === 3,
+        ok(doc.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
            'renders 3 review cards');
+        ok(doc.querySelectorAll('#reviewTrack .review-card .quote-rule').length > 0,
+           'review cards carry the quote-and-rule header');
+        ok(doc.querySelectorAll('[data-carousel][data-autoscroll] [data-car-pause]').length === 2,
+           'both auto-scrolling carousels expose a pause control');
+        ok(doc.querySelectorAll('.grievance-bar a').length === 2,
+           'grievance links bar sits below the partner carousel');
+
+        /* ---- auto-advancing carousels ----
+           Headless produces no animation frames, so a smooth scroll never
+           progresses; force instant scrolling to observe the advance itself. */
+        var st = doc.createElement('style');
+        st.textContent = '.car-track{scroll-behavior:auto !important}';
+        doc.head.appendChild(st);
+
+        var pTrack = doc.querySelector('#partnerTrack');
+        var rTrack = doc.querySelector('#reviewTrack');
+        var pCar = doc.querySelector('#partners [data-carousel]');
+        var startP = pTrack.scrollLeft, startR = rTrack.scrollLeft;
+
+        await wait(7000);
+        ok(pTrack.scrollLeft > startP, 'partner carousel advances on its own');
+        ok(rTrack.scrollLeft > startR, 'review carousel advances on its own');
+        ok(pTrack.scrollLeft <= pTrack.scrollWidth / 2 + 2,
+           'partner carousel wraps within the cloned half rather than running off the end');
+
+        pCar.querySelector('[data-car-pause]').click();
+        var atPause = pTrack.scrollLeft;
+        await wait(7000);
+        ok(Math.abs(pTrack.scrollLeft - atPause) < 2, 'pause control stops the advance');
+        ok(pCar.classList.contains('is-paused'), 'paused carousel is flagged for the icon swap');
         ok(doc.querySelectorAll('.odometer .odo-col').length === 2,
            'builds a 2-digit odometer for the hero amount');
         ok(doc.querySelectorAll('#app .store-badge').length === 2 &&

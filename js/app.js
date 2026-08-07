@@ -674,33 +674,93 @@
   })();
 
   /* ==========================================================================
-     Carousels (native scroll-snap + arrow buttons)
+     Carousels — arrows plus a timed auto-advance
+     Items are duplicated once, so stepping past the halfway point can be
+     rewound by exactly half a track and the wrap is invisible.
      ========================================================================== */
-  $$('[data-carousel]').forEach(function (root) {
+  var AUTOPLAY_MS = 3200;
+  var prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function initCarousel(root) {
     var track = $('[data-car-track]', root);
     var prev = $('[data-car-prev]', root);
     var next = $('[data-car-next]', root);
+    var pause = $('[data-car-pause]', root);
+    var auto = root.hasAttribute('data-autoscroll');
+    var timer = null, hovered = false, stoppedByUser = prefersStill;
 
-    function page() {
+    function step() {
       var first = track.firstElementChild;
-      return first ? first.getBoundingClientRect().width + 20 : track.clientWidth;
+      var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return first ? first.getBoundingClientRect().width + gap : track.clientWidth;
+    }
+
+    // jump a whole half-track without animating, so the wrap is not visible
+    function rewind(by) {
+      track.style.scrollBehavior = 'auto';
+      track.scrollLeft += by;
+      track.style.scrollBehavior = '';
+    }
+
+    function advance(dir) {
+      var half = track.scrollWidth / 2;
+      if (auto && half > 0) {
+        if (dir > 0 && track.scrollLeft >= half - 2) rewind(-half);
+        else if (dir < 0 && track.scrollLeft <= 2) rewind(half);
+      }
+      track.scrollLeft += dir * step();
     }
 
     function sync() {
+      if (auto) return;                       // a looping track is never at an end
       var max = track.scrollWidth - track.clientWidth;
       prev.disabled = track.scrollLeft < 4;
       next.disabled = track.scrollLeft >= max - 4;
     }
 
-    prev.addEventListener('click', function () { track.scrollLeft -= page(); });
-    next.addEventListener('click', function () { track.scrollLeft += page(); });
+    prev.addEventListener('click', function () { advance(-1); });
+    next.addEventListener('click', function () { advance(1); });
     track.addEventListener('scroll', sync, { passive: true });
     window.addEventListener('resize', sync);
-    sync();
 
-    // Re-sync once cards are populated.
-    new MutationObserver(sync).observe(track, { childList: true });
-  });
+    if (!auto) {
+      sync();
+      new MutationObserver(sync).observe(track, { childList: true });
+      return null;
+    }
+
+    function refresh() {
+      var shouldRun = !stoppedByUser && !hovered;
+      root.classList.toggle('is-paused', !shouldRun);
+      if (shouldRun && !timer) timer = setInterval(function () { advance(1); }, AUTOPLAY_MS);
+      if (!shouldRun && timer) { clearInterval(timer); timer = null; }
+    }
+
+    // hovering or tabbing in holds it still so the card can actually be read
+    root.addEventListener('mouseenter', function () { hovered = true; refresh(); });
+    root.addEventListener('mouseleave', function () { hovered = false; refresh(); });
+    root.addEventListener('focusin', function () { hovered = true; refresh(); });
+    root.addEventListener('focusout', function () { hovered = false; refresh(); });
+
+    pause.addEventListener('click', function () {
+      stoppedByUser = !stoppedByUser;
+      pause.setAttribute('aria-label', stoppedByUser ? 'Play the carousel' : 'Pause the carousel');
+      hovered = false;
+      refresh();
+    });
+
+    return { start: refresh };
+  }
+
+  /* Duplicate a populated track so the auto-advance can wrap without a jump. */
+  function makeSeamless(track) {
+    $$(':scope > *', track).forEach(function (item) {
+      var clone = item.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      $$('a, button', clone).forEach(function (n) { n.setAttribute('tabindex', '-1'); });
+      track.appendChild(clone);
+    });
+  }
 
   /* ==========================================================================
      Static content
@@ -718,8 +778,9 @@
     block.appendChild(el('div', null, p.phone));
     li.appendChild(block);
 
+    // two links keeps them on one line; grievance redressal has its own bar below
     var links = el('div', 'p-links');
-    ['Privacy Policy', 'T&C', 'Grievance Redressal'].forEach(function (label) {
+    ['Privacy Policy', 'T&C'].forEach(function (label) {
       var a = el('a', null, label);
       a.href = '#grievance';
       links.appendChild(a);
@@ -747,6 +808,7 @@
     var host = $('#reviewTrack');
     AP.REVIEWS.forEach(function (r) {
       var li = el('li', 'review-card');
+      li.appendChild(el('span', 'quote-rule'));
       li.appendChild(el('blockquote', null, r.text));
       var author = el('div', 'review-author');
       author.appendChild(el('span', 'p-logo', r.badge));
@@ -758,6 +820,14 @@
       host.appendChild(li);
     });
   })();
+
+  /* ---------- Carousels start once their tracks are populated ---------- */
+  $$('[data-carousel]').forEach(function (root) {
+    var track = $('[data-car-track]', root);
+    if (root.hasAttribute('data-autoscroll') && track.children.length) makeSeamless(track);
+    var api = initCarousel(root);
+    if (api) api.start();
+  });
 
   /* ---------- Mobile menu ---------- */
   (function menu() {
