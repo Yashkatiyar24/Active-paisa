@@ -35,6 +35,10 @@ sys.exit(1 if int(m.group(2)) else 0)
 '
 }
 
+echo "── home page ─────────────────────────────────"
+run_suite home.test.html
+H=$?
+echo
 echo "── personal loan ─────────────────────────────"
 run_suite flow.test.html
 A=$?
@@ -42,4 +46,4 @@ echo
 echo "── business loan ─────────────────────────────"
 run_suite loan.test.html
 B=$?
-exit $(( A || B ))
+exit $(( H || A || B ))

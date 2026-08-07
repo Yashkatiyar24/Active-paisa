@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activ Paisa — home page tests</title>
+<style>
+  body { font: 14px/1.6 ui-monospace, Menlo, monospace; padding: 20px; }
+  iframe { width: 1200px; height: 800px; border: 1px solid #ccc; position: fixed; right: 20px; top: 20px; }
+  li { list-style: none; }
+  .pass::before { content: "PASS  "; color: #059669; font-weight: 700; }
+  .fail::before { content: "FAIL  "; color: #DC2626; font-weight: 700; }
+  #summary { font-weight: 700; margin-top: 14px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>Home page tests</h1>
+<ul id="results"></ul>
+<p id="summary">running…</p>
+<iframe id="app" src="../index.html" title="Home page under test"></iframe>
+
+<script>
+/* The home page covers all three products: no calculators, no application. */
+(function () {
+  var out = document.getElementById('results');
+  var pass = 0, fail = 0;
+  function ok(cond, label) {
+    var li = document.createElement('li');
+    li.className = cond ? 'pass' : 'fail';
+    li.textContent = label;
+    out.appendChild(li);
+    cond ? pass++ : fail++;
+  }
+  var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  document.getElementById('app').addEventListener('load', function () {
+    var d = this.contentDocument, w = this.contentWindow;
+    (async function run() {
+      try {
+        var realCards = d.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])');
+        ok(realCards.length === 15, 'renders all 15 lending partner cards (' + realCards.length + ')');
+        ok(d.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 15,
+           'clones the partner track so the auto-scroll wraps seamlessly');
+        ok(d.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
+           'partner cards carry the confirmed lender names');
+        ok(d.querySelectorAll('#partnerTrack .p-logo img').length > 0,
+           'partner cards render the supplied lender logos');
+        ok(d.querySelectorAll('#partnerTrack .p-grievance').length > 0,
+           'every partner card links to grievance redressal');
+        ok(d.querySelectorAll('#dlaGrid .dla-card').length === 2,
+           'renders 2 digital lending partner cards');
+        ok(d.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
+           'renders 3 review cards');
+        ok(d.querySelector('.odometer') === null,
+           'the odometer belongs to the personal loan page, not here');
+        ok(d.querySelectorAll('#app .store-badge').length === 2 &&
+           d.querySelector('#app').textContent.indexOf('Coming soon') > -1,
+           'app section shows both stores as coming soon');
+        ok(d.querySelectorAll('.grievance-bar a').length === 2,
+           'grievance links bar sits below the partner carousel');
+
+
+        /* ---- product chooser ---- */
+        var cards = d.querySelectorAll('.prod-card');
+        ok(cards.length === 3, 'home page offers all three products');
+        var hrefs = [].map.call(d.querySelectorAll('.prod-card a'), function (a) {
+          return a.getAttribute('href'); });
+        ok(hrefs.indexOf('personal-loan.html') > -1 &&
+           hrefs.indexOf('business-loan.html') > -1 &&
+           hrefs.indexOf('home-loan.html') > -1,
+           'each product card links to its own page');
+
+        /* ---- the home page owns none of the product machinery ---- */
+        ok(d.querySelector('#emiCalc') === null, 'home page carries no EMI calculator');
+        ok(d.querySelector('#applyView') === null, 'home page carries no application flow');
+        ok(d.querySelector('#compareGrid') === null, 'home page carries no comparison cards');
+
+        /* ---- carousels ----
+           Headless produces no animation frames, so a smooth scroll never
+           progresses; force instant scrolling to observe the advance. */
+        var st = d.createElement('style');
+        st.textContent = '.car-track{scroll-behavior:auto !important}';
+        d.head.appendChild(st);
+        var pTrack = d.querySelector('#partnerTrack');
+        var pCar = d.querySelector('#partners [data-carousel]');
+        var startP = pTrack.scrollLeft;
+        await wait(7000);
+        ok(pTrack.scrollLeft > startP, 'partner carousel advances on its own');
+        ok(pTrack.scrollLeft <= pTrack.scrollWidth / 2 + 2,
+           'partner carousel wraps within the cloned half');
+        pCar.querySelector('[data-car-pause]').click();
+        var atPause = pTrack.scrollLeft;
+        await wait(7000);
+        ok(Math.abs(pTrack.scrollLeft - atPause) < 2, 'pause control stops the advance');
+
+
+        /* ---- computed-style guards ----
+           A deleted CSS block still passes every markup assertion, so check the
+           key components are actually styled, not merely present. */
+        function styled(sel, prop, reject) {
+          var node = d.querySelector(sel);
+          return node ? w.getComputedStyle(node)[prop] !== reject : false;
+        }
+        ok(styled('.store-badge', 'borderTopWidth', '0px'), 'store badges are styled');
+        ok(w.getComputedStyle(d.querySelector('.store-badge span')).flexDirection === 'column',
+           'store badge stacks its platform label above the status');
+        ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
+        ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
+        ok(styled('.prod-card', 'borderTopWidth', '0px'), 'product cards are styled');
+        ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
+
+        /* ---- images ---- */
+        var art = [].slice.call(d.querySelectorAll(
+          '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
+        ok(art.length >= 20, 'logo, avatar and illustration images render (' + art.length + ')');
+        var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
+        ok(broken.length === 0, 'every image resolves');
+        ok(art.every(function (n) { return n.hasAttribute('alt'); }), 'every image carries alt text');
+
+        /* ---- brand and placeholder guards ---- */
+        var html = d.documentElement.outerHTML.toLowerCase();
+        ok(html.indexOf('moneycontrol') === -1, 'no "moneycontrol" reference remains');
+        ok(html.indexOf('nw18') === -1 && html.indexOf('network18') === -1,
+           'no Network18 reference remains');
+        ok(html.indexOf('googletagmanager') === -1, 'no third-party analytics remains');
+        var text = d.body.innerText || d.body.textContent;
+        ok(['To be published', 'to be provided', '[name]', 'Lorem ipsum', 'TODO']
+             .every(function (t) { return text.indexOf(t) === -1; }),
+           'no placeholder text is visible');
+
+      } catch (e) {
+        ok(false, 'unexpected error: ' + e.message);
+      }
+      var s = document.getElementById('summary');
+      s.textContent = pass + ' passed, ' + fail + ' failed';
+      s.style.color = fail ? '#DC2626' : '#059669';
+      document.title = fail ? 'FAIL' : 'PASS';
+    })();
+  });
+})();
+</script>
+</body>
+</html>

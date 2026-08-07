@@ -1,38 +1,14 @@
 /* ==========================================================================
-   Activ Paisa — personal loan landing extras
-   The sections unique to this page: hero odometer, lending partners, digital
-   lending partners and reviews. Calculators, comparison, checklist and the
-   application flow all come from APLoan.
+   Activ Paisa — home page
+   The home page covers all three products, so it carries no calculators and no
+   application flow — those live on the product pages. This renders the
+   company-wide sections: lending partners, digital lending partners, reviews.
    ========================================================================== */
 
 (function (C, AP) {
   'use strict';
 
   var $ = C.$, el = C.el;
-
-  /* ---------- Hero odometer ---------- */
-  function odometer() {
-    var host = $('.odometer');
-    if (!host) return;
-    var digits = String(host.dataset.value || '').split('');
-    host.textContent = '';
-
-    digits.forEach(function (digit, i) {
-      var col = el('span', 'odo-col');
-      var list = el('span', 'odo-list');
-      // two full runs so the reel spins a lap before landing
-      for (var n = 0; n < 20; n++) list.appendChild(el('span', 'odo-d', String(n % 10)));
-      col.appendChild(list);
-      host.appendChild(col);
-
-      var target = 10 + Number(digit);
-      requestAnimationFrame(function () {
-        setTimeout(function () {
-          list.style.transform = 'translateY(-' + (target * 100 / 20) + '%)';
-        }, 90 * i);
-      });
-    });
-  }
 
   /* ---------- Partner cards ---------- */
   function partnerCard(p, tag) {
@@ -98,11 +74,14 @@
     });
   }
 
-  /* Landing content first, so the carousels APLoan starts have cards to clone. */
-  odometer();
+  /* Cards first, so the carousels have something to clone. */
   renderPartners();
   renderDla();
   renderReviews();
 
-  APLoan.init(APProducts.PERSONAL);
+  C.initCarousels();
+  C.initAccordion();
+  C.initMenu();
+  C.stampYear();
+  C.initReveal();
 })(APCore, AP);

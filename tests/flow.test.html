@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Activ Paisa — personal loan tests</title>
+<title>Activ Paisa — personal loan page tests</title>
 <style>
   body { font: 14px/1.6 ui-monospace, Menlo, monospace; padding: 20px; }
   iframe { width: 1200px; height: 800px; border: 1px solid #ccc; position: fixed; right: 20px; top: 20px; }
@@ -13,10 +13,10 @@
 </style>
 </head>
 <body>
-<h1>Personal loan tests</h1>
+<h1>Personal loan page tests</h1>
 <ul id="results"></ul>
 <p id="summary">running…</p>
-<iframe id="app" src="../index.html" title="Personal loan page under test"></iframe>
+<iframe id="app" src="../personal-loan.html" title="Personal loan page under test"></iframe>
 
 <script>
 /* Drives the real personal loan page: landing sections, widgets and the full
@@ -71,28 +71,6 @@
     (async function run() {
       try {
         /* ================= landing ================= */
-        var realCards = d.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])');
-        ok(realCards.length === 15, 'renders all 15 lending partner cards (' + realCards.length + ')');
-        ok(d.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 15,
-           'clones the partner track so the auto-scroll wraps seamlessly');
-        ok(d.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
-           'partner cards carry the confirmed lender names');
-        ok(d.querySelectorAll('#partnerTrack .p-logo img').length > 0,
-           'partner cards render the supplied lender logos');
-        ok(d.querySelectorAll('#partnerTrack .p-grievance').length > 0,
-           'every partner card links to grievance redressal');
-        ok(d.querySelectorAll('#dlaGrid .dla-card').length === 2,
-           'renders 2 digital lending partner cards');
-        ok(d.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
-           'renders 3 review cards');
-        ok(d.querySelectorAll('.odometer .odo-col').length === 2,
-           'builds a 2-digit odometer for the hero amount');
-        ok(d.querySelectorAll('#app .store-badge').length === 2 &&
-           d.querySelector('#app').textContent.indexOf('Coming soon') > -1,
-           'app section shows both stores as coming soon');
-        ok(d.querySelectorAll('.grievance-bar a').length === 2,
-           'grievance links bar sits below the partner carousel');
-
         /* ---- product sections shared with the other loan pages ---- */
         ok(d.querySelectorAll('#compareGrid .cmp-card').length === 3, 'renders 3 comparison cards');
         ok(d.querySelectorAll('#compareGrid .cmp-card.is-featured').length === 1,
@@ -102,6 +80,8 @@
         ok(d.querySelector('script[type="application/ld+json"]') !== null,
            'page carries FAQ structured data for search engines');
         ok(d.querySelector('#stickyCta') !== null, 'sticky apply bar is present');
+        ok(d.querySelectorAll('.odometer .odo-col').length === 2,
+           'builds a 2-digit odometer for the hero amount');
 
         /* ---- EMI calculator ---- */
         var emiOut = d.querySelector('#calcEmi');
@@ -136,31 +116,11 @@
         ok(faq1.classList.contains('is-open') && !faq0.classList.contains('is-open'),
            'opening another question closes the previous one');
 
-        /* ---- carousels ----
-           Headless produces no animation frames, so a smooth scroll never
-           progresses; force instant scrolling to observe the advance. */
-        var st = d.createElement('style');
-        st.textContent = '.car-track{scroll-behavior:auto !important}';
-        d.head.appendChild(st);
-        var pTrack = d.querySelector('#partnerTrack');
-        var pCar = d.querySelector('#partners [data-carousel]');
-        var startP = pTrack.scrollLeft;
-        await wait(7000);
-        ok(pTrack.scrollLeft > startP, 'partner carousel advances on its own');
-        ok(pTrack.scrollLeft <= pTrack.scrollWidth / 2 + 2,
-           'partner carousel wraps within the cloned half');
-        pCar.querySelector('[data-car-pause]').click();
-        var atPause = pTrack.scrollLeft;
-        await wait(7000);
-        ok(Math.abs(pTrack.scrollLeft - atPause) < 2, 'pause control stops the advance');
-
         /* ---- computed-style guards ---- */
         function styled(sel, prop, reject) {
           var node = d.querySelector(sel);
           return node ? w.getComputedStyle(node)[prop] !== reject : false;
         }
-        ok(styled('.store-badge', 'borderTopWidth', '0px'), 'store badges are styled');
-        ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
         ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
         ok(styled('.cmp-card', 'borderTopWidth', '0px'), 'comparison cards are styled');
         // .calc-out uses a gradient, which lands on backgroundImage not backgroundColor
@@ -168,9 +128,8 @@
         ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
 
         /* ---- images ---- */
-        var art = [].slice.call(d.querySelectorAll(
-          '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
-        ok(art.length >= 20, 'logo, avatar and illustration images render (' + art.length + ')');
+        var art = [].slice.call(d.querySelectorAll('.brand-logo, .footer-logo, .offer-badge img'));
+        ok(art.length >= 2, 'brand images render (' + art.length + ')');
         var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
         ok(broken.length === 0, 'every image resolves');
         ok(art.every(function (n) { return n.hasAttribute('alt'); }), 'every image carries alt text');
