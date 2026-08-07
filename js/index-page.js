@@ -1,8 +1,8 @@
 /* ==========================================================================
-   Activ Paisa — home page
-   The home page covers all three products, so it carries no calculators and no
-   application flow — those live on the product pages. This renders the
-   company-wide sections: lending partners, digital lending partners, reviews.
+   Activ Paisa — main page (personal loan)
+   Renders the company-wide sections — lending partners, digital lending
+   partners and reviews — then hands the product widgets and the application
+   flow to APLoan.
    ========================================================================== */
 
 (function (C, AP) {
@@ -79,10 +79,5 @@
   renderDla();
   renderReviews();
 
-  C.odometer();
-  C.initCarousels();
-  C.initAccordion();
-  C.initMenu();
-  C.stampYear();
-  C.initReveal();
+  APLoan.init(APProducts.PERSONAL);
 })(APCore, AP);
