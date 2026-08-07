@@ -93,6 +93,20 @@
         ok(doc.querySelectorAll('#app .store-badge').length === 2 &&
            doc.querySelector('#app').textContent.indexOf('Coming soon') > -1,
            'app section shows both stores as coming soon');
+
+        var footer = doc.querySelector('.site-footer').textContent;
+        ok(doc.querySelectorAll('.footer-col').length === 2,
+           'footer has the Company and Digital Lending columns');
+        ok(footer.indexOf('Digital Lending') > -1 &&
+           footer.indexOf('Grievance Redressal') > -1,
+           'footer carries the Digital Lending links');
+        ok(footer.indexOf('Statutory Information') === -1 &&
+           footer.indexOf('Investor Charter') === -1 &&
+           footer.indexOf('Investor Complaints') === -1,
+           'footer omits the statutory / investor-complaint columns');
+        ok(footer.indexOf('SEBI') === -1 && footer.indexOf('BASL') === -1 &&
+           footer.indexOf('securities market') === -1,
+           'footer makes no SEBI, BASL or securities-market claim');
         ok(doc.querySelector('#applyView').hidden === true,
            'application view starts hidden');
 
