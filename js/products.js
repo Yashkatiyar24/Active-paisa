@@ -212,6 +212,48 @@ var APProducts = (function () {
     ]
   };
 
+  /* ---------- Personal loan ---------- */
+  var PERSONAL = {
+    id: 'personal',
+    slug: 'index',
+    name: 'Personal Loan',
+    calc: { min: 50000, max: 5000000, step: 25000, start: 800000,
+            rateMin: 9.99, rateMax: 24, rate: 12.5,
+            tenureMin: 12, tenureMax: 60, tenure: 36 },
+    eligibility: { foir: 50, rate: 12.5, tenure: 36, minIncome: 15000,
+                   incomeLabel: 'Net monthly income' },
+    documents: [
+      { id: 'pan',    label: 'PAN card',         hint: 'A clear photo of the card itself' },
+      { id: 'kyc',    label: 'Address proof',    hint: 'Aadhaar, passport or voter ID, both sides' },
+      { id: 'salary', label: 'Salary slips',     hint: 'Your last 3 months' },
+      { id: 'bank',   label: 'Bank statements',  hint: 'Last 6 months of your salary account' }
+    ],
+    profileFields: [
+      { name: 'employment', label: 'Employment type', type: 'choice', rule: 'required', span: 2,
+        options: ['Salaried', 'Self-employed'] },
+      { name: 'company',    label: 'Employer or business name', type: 'text', rule: 'org', span: 2 },
+      { name: 'income',     label: 'Net monthly income', type: 'money', rule: 'income' },
+      { name: 'household',  label: 'Annual household income', type: 'money', rule: 'household' }
+    ],
+    /* Personal loan is the one product that returns offers before submitting. */
+    offers: [
+      { id: 'bp1', name: 'Bank Partner 1', tag: 'NBFC · Personal Loan',
+        logo: 'assets/brand/partners/p1.svg',
+        rate: 10.99, tenure: 36, multiple: 12, cap: 1500000, pill: 'Lowest EMI' },
+      { id: 'bp2', name: 'Bank Partner 2', tag: 'Bank · Personal Loan',
+        logo: 'assets/brand/partners/p2.svg',
+        rate: 12.50, tenure: 24, multiple: 15, cap: 2000000, pill: 'Instant disbursal' },
+      { id: 'bp3', name: 'Bank Partner 3', tag: 'NBFC · Personal Loan',
+        logo: 'assets/brand/partners/p3.svg',
+        rate: 14.25, tenure: 48, multiple: 18, cap: 1000000, pill: 'Highest amount' }
+    ],
+    compare: [
+      { name: '12 months', tenure: 12, rate: 10.99, note: 'Least interest, largest instalment' },
+      { name: '36 months', tenure: 36, rate: 12.50, note: 'Most commonly chosen', featured: true },
+      { name: '60 months', tenure: 60, rate: 14.25, note: 'Smallest instalment, most interest paid' }
+    ]
+  };
+
   /* Assemble the step list for a product. */
   function stepsFor(product) {
     return ORDER.map(function (id) {
@@ -237,6 +279,11 @@ var APProducts = (function () {
     BUSINESS: BUSINESS,
     HOME: HOME,
     stepsFor: stepsFor,
-    byId: function (id) { return id === 'home' ? HOME : BUSINESS; }
+    PERSONAL: PERSONAL,
+    byId: function (id) {
+      if (id === 'home') return HOME;
+      if (id === 'personal') return PERSONAL;
+      return BUSINESS;
+    }
   };
 })();

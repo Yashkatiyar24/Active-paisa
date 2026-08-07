@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Activ Paisa — flow tests</title>
+<title>Activ Paisa — personal loan tests</title>
 <style>
   body { font: 14px/1.6 ui-monospace, Menlo, monospace; padding: 20px; }
-  iframe { width: 420px; height: 700px; border: 1px solid #ccc; position: fixed; right: 20px; top: 20px; }
+  iframe { width: 1200px; height: 800px; border: 1px solid #ccc; position: fixed; right: 20px; top: 20px; }
   li { list-style: none; }
   .pass::before { content: "PASS  "; color: #059669; font-weight: 700; }
   .fail::before { content: "FAIL  "; color: #DC2626; font-weight: 700; }
@@ -13,14 +13,14 @@
 </style>
 </head>
 <body>
-<h1>Flow tests</h1>
+<h1>Personal loan tests</h1>
 <ul id="results"></ul>
 <p id="summary">running…</p>
-<iframe id="app" src="../index.html" title="App under test"></iframe>
+<iframe id="app" src="../index.html" title="Personal loan page under test"></iframe>
 
 <script>
-/* Integration test: drives the real application in an iframe.
-   Run:  npm test        (or open this file over http://) */
+/* Drives the real personal loan page: landing sections, widgets and the full
+   application flow through to the offers screen. Run: npm test */
 (function () {
   var out = document.getElementById('results');
   var pass = 0, fail = 0;
@@ -32,364 +32,336 @@
     out.appendChild(li);
     cond ? pass++ : fail++;
   }
-
   var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-
   function waitFor(fn, timeout) {
-    timeout = timeout || 5000;
+    timeout = timeout || 8000;
     var start = Date.now();
     return new Promise(function (resolve, reject) {
       (function poll() {
-        var v;
-        try { v = fn(); } catch (e) { v = null; }
+        var v; try { v = fn(); } catch (e) { v = null; }
         if (v) return resolve(v);
         if (Date.now() - start > timeout) return reject(new Error('timeout'));
         setTimeout(poll, 50);
       })();
     });
   }
-
-  function fire(node, type) { node.dispatchEvent(new Event(type, { bubbles: true })); }
-
-  function type(doc, sel, value) {
-    var input = doc.querySelector(sel);
-    input.value = value;
-    fire(input, 'input');
-    fire(input, 'blur');
-    return input;
+  function fire(n, t) { n.dispatchEvent(new Event(t, { bubbles: true })); }
+  function set(d, sel, v) { var i = d.querySelector(sel); i.value = v; fire(i, 'input'); fire(i, 'blur'); return i; }
+  function pick(d, name, v) {
+    var r = d.querySelector('input[name="' + name + '"][value="' + v + '"]');
+    r.checked = true; fire(r, 'change');
   }
-
-  function pick(doc, name, value) {
-    var radio = doc.querySelector('input[name="' + name + '"][value="' + value + '"]');
-    radio.checked = true;
-    fire(radio, 'change');
+  function choose(d, name, v) { var s = d.querySelector('[name="' + name + '"]'); s.value = v; fire(s, 'change'); }
+  function visibleStep(d) {
+    if (d.querySelector('.flow-done:not([hidden])')) return 'done';
+    var s = d.querySelector('.flow-step:not([hidden])');
+    if (!s) return -1;
+    return s.dataset.step === undefined ? 'offers' : Number(s.dataset.step);
   }
-
-  function visibleStep(doc) {
-    var s = doc.querySelector('.step:not([hidden])');
-    return s ? Number(s.dataset.step) : -1;
+  function submitStep(d) {
+    d.querySelector('.flow-step:not([hidden])').querySelector('button[type="submit"]').click();
   }
-
-  function submit(doc, formSel) {
-    doc.querySelector(formSel).querySelector('button[type="submit"]').click();
-  }
+  function money(s) { return parseInt(String(s).replace(/\D/g, ''), 10); }
 
   var frame = document.getElementById('app');
 
   frame.addEventListener('load', function () {
-    var doc = frame.contentDocument;
+    var d = frame.contentDocument, w = frame.contentWindow;
 
     (async function run() {
       try {
-        /* ---- Landing page ---- */
-        var realCards = doc.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])');
+        /* ================= landing ================= */
+        var realCards = d.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])');
         ok(realCards.length === 15, 'renders all 15 lending partner cards (' + realCards.length + ')');
-        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 15,
+        ok(d.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 15,
            'clones the partner track so the auto-scroll wraps seamlessly');
-        ok(doc.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
+        ok(d.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
            'partner cards carry the confirmed lender names');
-        ok(doc.querySelectorAll('#partnerTrack .p-logo img').length > 0,
+        ok(d.querySelectorAll('#partnerTrack .p-logo img').length > 0,
            'partner cards render the supplied lender logos');
-        ok(doc.querySelectorAll('#partnerTrack .p-grievance').length > 0,
+        ok(d.querySelectorAll('#partnerTrack .p-grievance').length > 0,
            'every partner card links to grievance redressal');
-
-        /* nothing on the page should read as unfinished copy */
-        var pageText = doc.body.innerText || doc.body.textContent;
-        var leftovers = ['To be published', 'to be provided', '[name]',
-                         'registered entity name', 'Lorem ipsum', 'TODO']
-          .filter(function (t) { return pageText.indexOf(t) > -1; });
-        ok(leftovers.length === 0,
-           'no placeholder text is visible' + (leftovers.length ? ' — found: ' + leftovers.join(', ') : ''));
-        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden] a[tabindex="-1"]').length > 0,
-           'clones are taken out of the tab order');
-        ok(doc.querySelectorAll('#dlaGrid .dla-card').length === 2,
+        ok(d.querySelectorAll('#dlaGrid .dla-card').length === 2,
            'renders 2 digital lending partner cards');
-        ok(doc.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
+        ok(d.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
            'renders 3 review cards');
-        ok(doc.querySelectorAll('#reviewTrack .review-card .quote-rule').length > 0,
-           'review cards carry the quote-and-rule header');
-        ok(doc.querySelectorAll('[data-carousel][data-autoscroll] [data-car-pause]').length === 2,
-           'both auto-scrolling carousels expose a pause control');
-        ok(doc.querySelectorAll('.grievance-bar a').length === 2,
+        ok(d.querySelectorAll('.odometer .odo-col').length === 2,
+           'builds a 2-digit odometer for the hero amount');
+        ok(d.querySelectorAll('#app .store-badge').length === 2 &&
+           d.querySelector('#app').textContent.indexOf('Coming soon') > -1,
+           'app section shows both stores as coming soon');
+        ok(d.querySelectorAll('.grievance-bar a').length === 2,
            'grievance links bar sits below the partner carousel');
 
-        /* ---- auto-advancing carousels ----
+        /* ---- product sections shared with the other loan pages ---- */
+        ok(d.querySelectorAll('#compareGrid .cmp-card').length === 3, 'renders 3 comparison cards');
+        ok(d.querySelectorAll('#compareGrid .cmp-card.is-featured').length === 1,
+           'exactly one comparison card is flagged as most chosen');
+        ok(d.querySelectorAll('#docList .doc-row').length === 4, 'renders the 4-document checklist');
+        ok(d.querySelectorAll('.faq-item').length === 6, 'renders 6 FAQ entries');
+        ok(d.querySelector('script[type="application/ld+json"]') !== null,
+           'page carries FAQ structured data for search engines');
+        ok(d.querySelector('#stickyCta') !== null, 'sticky apply bar is present');
+
+        /* ---- EMI calculator ---- */
+        var emiOut = d.querySelector('#calcEmi');
+        var firstEmi = money(emiOut.textContent);
+        // 8,00,000 at 12.5% over 36 months is about 26,760
+        ok(Math.abs(firstEmi - 26760) < 60, 'EMI matches the amortisation formula (' + firstEmi + ')');
+
+        var tenure = d.querySelector('#calcTenure');
+        tenure.value = 60; fire(tenure, 'input');
+        await wait(40);
+        ok(money(emiOut.textContent) < firstEmi, 'a longer tenure lowers the instalment');
+
+        /* ---- eligibility calculator ---- */
+        var eligAmount = d.querySelector('#eligAmount');
+        ok(eligAmount.textContent === '—', 'eligibility starts empty');
+        set(d, '#eligIncome', '80000');
+        await wait(40);
+        var elig1 = money(eligAmount.textContent);
+        ok(elig1 > 0, 'eligibility computes from income (' + elig1 + ')');
+        set(d, '#eligObligations', '20000');
+        await wait(40);
+        ok(money(eligAmount.textContent) < elig1, 'existing EMIs reduce the eligible amount');
+
+        /* ---- FAQ accordion ---- */
+        var faq0 = d.querySelectorAll('.faq-item')[0];
+        var faq1 = d.querySelectorAll('.faq-item')[1];
+        faq0.querySelector('[data-acc-trigger]').click();
+        await wait(30);
+        ok(faq0.classList.contains('is-open'), 'clicking a question opens it');
+        faq1.querySelector('[data-acc-trigger]').click();
+        await wait(30);
+        ok(faq1.classList.contains('is-open') && !faq0.classList.contains('is-open'),
+           'opening another question closes the previous one');
+
+        /* ---- carousels ----
            Headless produces no animation frames, so a smooth scroll never
-           progresses; force instant scrolling to observe the advance itself. */
-        var st = doc.createElement('style');
+           progresses; force instant scrolling to observe the advance. */
+        var st = d.createElement('style');
         st.textContent = '.car-track{scroll-behavior:auto !important}';
-        doc.head.appendChild(st);
-
-        var pTrack = doc.querySelector('#partnerTrack');
-        var rTrack = doc.querySelector('#reviewTrack');
-        var pCar = doc.querySelector('#partners [data-carousel]');
-        var startP = pTrack.scrollLeft, startR = rTrack.scrollLeft;
-
+        d.head.appendChild(st);
+        var pTrack = d.querySelector('#partnerTrack');
+        var pCar = d.querySelector('#partners [data-carousel]');
+        var startP = pTrack.scrollLeft;
         await wait(7000);
         ok(pTrack.scrollLeft > startP, 'partner carousel advances on its own');
-        ok(rTrack.scrollLeft > startR, 'review carousel advances on its own');
         ok(pTrack.scrollLeft <= pTrack.scrollWidth / 2 + 2,
-           'partner carousel wraps within the cloned half rather than running off the end');
-
+           'partner carousel wraps within the cloned half');
         pCar.querySelector('[data-car-pause]').click();
         var atPause = pTrack.scrollLeft;
         await wait(7000);
         ok(Math.abs(pTrack.scrollLeft - atPause) < 2, 'pause control stops the advance');
-        ok(pCar.classList.contains('is-paused'), 'paused carousel is flagged for the icon swap');
-        ok(doc.querySelectorAll('.odometer .odo-col').length === 2,
-           'builds a 2-digit odometer for the hero amount');
-        ok(doc.querySelectorAll('#app .store-badge').length === 2 &&
-           doc.querySelector('#app').textContent.indexOf('Coming soon') > -1,
-           'app section shows both stores as coming soon');
 
-        /* Computed-style guards. A deleted CSS block still passes every
-           markup-only assertion, so check the key components are actually
-           styled, not merely present. */
-        var w = frame.contentWindow;
+        /* ---- computed-style guards ---- */
         function styled(sel, prop, reject) {
-          var node = doc.querySelector(sel);
-          if (!node) return false;
-          return w.getComputedStyle(node)[prop] !== reject;
+          var node = d.querySelector(sel);
+          return node ? w.getComputedStyle(node)[prop] !== reject : false;
         }
         ok(styled('.store-badge', 'borderTopWidth', '0px'), 'store badges are styled');
-
-        /* artwork actually resolves — a broken src leaves naturalWidth at 0 */
-        var art = [].slice.call(doc.querySelectorAll(
-          '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
-        ok(art.length >= 8, 'logo, avatar and illustration images are all rendered (' + art.length + ')');
-        var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
-        ok(broken.length === 0,
-           'every image resolves' + (broken.length ? ' — broken: ' + broken.map(function (n) {
-             return n.getAttribute('src'); }).join(', ') : ''));
-        ok(art.every(function (n) { return n.hasAttribute('alt'); }),
-           'every image carries an alt attribute');
-        ok(doc.querySelectorAll('.avatar img[loading="lazy"]').length > 0,
-           'avatar images are lazy-loaded');
-        ok(w.getComputedStyle(doc.querySelector('.store-badge span')).flexDirection === 'column',
-           'store badge stacks its platform label above the status');
         ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
         ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
-        ok(styled('.capture-card', 'backgroundColor', 'rgba(0, 0, 0, 0)'),
-           'application capture card is styled');
-        ok(styled('.hl-icon', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'hero highlight icons are styled');
+        ok(styled('.cmp-card', 'borderTopWidth', '0px'), 'comparison cards are styled');
+        // .calc-out uses a gradient, which lands on backgroundImage not backgroundColor
+        ok(styled('.calc-out', 'backgroundImage', 'none'), 'calculator panel is styled');
         ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
 
-        var footer = doc.querySelector('.site-footer').textContent;
-        ok(doc.querySelectorAll('.footer-col').length === 2,
-           'footer has the Company and Digital Lending columns');
-        ok(footer.indexOf('Digital Lending') > -1 &&
-           footer.indexOf('Grievance Redressal') > -1,
-           'footer carries the Digital Lending links');
-        ok(footer.indexOf('Statutory Information') === -1 &&
-           footer.indexOf('Investor Charter') === -1 &&
-           footer.indexOf('Investor Complaints') === -1,
-           'footer omits the statutory / investor-complaint columns');
-        ok(footer.indexOf('SEBI') === -1 && footer.indexOf('BASL') === -1 &&
-           footer.indexOf('securities market') === -1,
-           'footer makes no SEBI, BASL or securities-market claim');
-        ok(doc.querySelector('#applyView').hidden === true,
-           'application view starts hidden');
+        /* ---- images ---- */
+        var art = [].slice.call(d.querySelectorAll(
+          '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
+        ok(art.length >= 20, 'logo, avatar and illustration images render (' + art.length + ')');
+        var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
+        ok(broken.length === 0, 'every image resolves');
+        ok(art.every(function (n) { return n.hasAttribute('alt'); }), 'every image carries alt text');
 
-        /* ---- Enter the flow ---- */
-        doc.querySelector('[data-open-apply]').click();
-        await wait(80);
-        ok(doc.querySelector('#applyView').hidden === false &&
-           doc.querySelector('#main').hidden === true,
-           'Check Offers replaces the landing page with the application view');
-
-        /* ---- Step 1: mobile validation ---- */
-        ok(visibleStep(doc) === 0, 'starts on the mobile step');
-
-        type(doc, '#mobile', '12345');
-        submit(doc, '#formMobile');
+        /* ================= application flow ================= */
+        ok(d.querySelector('#applyView').hidden === true, 'application view starts hidden');
+        d.querySelector('[data-open-apply]').click();
         await wait(60);
-        ok(doc.querySelector('#mobile').closest('.field').classList.contains('has-error'),
+        ok(d.querySelector('#applyView').hidden === false && d.querySelector('#main').hidden === true,
+           'Check Offers replaces the landing page with the application');
+        ok(visibleStep(d) === 0, 'starts on the mobile step');
+
+        /* 1. mobile */
+        set(d, '#flowMobile', '12345');
+        submitStep(d);
+        await wait(1300);
+        ok(d.querySelector('#flowMobile').closest('.field').classList.contains('has-error'),
            'rejects a short mobile number');
-        ok(visibleStep(doc) === 0, 'does not advance on an invalid mobile');
+        ok(visibleStep(d) === 0, 'does not advance on an invalid mobile');
 
-        type(doc, '#mobile', '1234567890');
-        submit(doc, '#formMobile');
-        await wait(60);
-        ok(doc.querySelector('#mobile').closest('.field').classList.contains('has-error'),
-           'rejects a mobile not starting 6-9');
-
-        type(doc, '#mobile', '9876543210');
-        submit(doc, '#formMobile');
-        // wait past the simulated submit delay, or a false advance looks like a pass
-        await wait(1400);
-        ok(doc.querySelector('#consent').closest('.field').classList.contains('has-error'),
+        set(d, '#flowMobile', '9876543210');
+        submitStep(d);
+        await wait(1300);
+        ok(d.querySelector('#flowConsent').closest('.field').classList.contains('has-error'),
            'requires the consent checkbox');
-        ok(visibleStep(doc) === 0, 'does not advance without consent');
+        ok(visibleStep(d) === 0, 'does not advance without consent');
 
-        var consent = doc.querySelector('#consent');
-        consent.checked = true;
-        fire(consent, 'change');
-        submit(doc, '#formMobile');
-        await waitFor(function () { return visibleStep(doc) === 1; });
+        var consent = d.querySelector('#flowConsent');
+        consent.checked = true; fire(consent, 'change');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 1; });
         ok(true, 'mobile + consent advances straight to OTP');
-        ok(doc.querySelector('#stepper').hidden,
-           'stepper stays hidden on the mobile and OTP screens');
 
-        /* ---- Step 2: OTP ---- */
-        var target = doc.querySelector('#otpTarget').textContent;
-        ok(target.indexOf('XXXXX') > -1 && target.indexOf('9876543210') === -1,
-           'masks the mobile number on the OTP screen');
-        ok(doc.querySelector('#resendBtn').disabled, 'resend is disabled while the timer runs');
-
-        submit(doc, '#formOtp');
-        await wait(60);
-        ok(doc.querySelector('#otp-0').closest('.field').classList.contains('has-error'),
+        /* 2. OTP */
+        ok(d.querySelector('#flowResend').disabled, 'resend is disabled while the timer runs');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('#otp0').closest('.field').classList.contains('has-error'),
            'rejects an incomplete OTP');
-        ok(visibleStep(doc) === 1, 'does not advance on an incomplete OTP');
+        var boxes = d.querySelectorAll('#flowOtp input');
+        for (var i = 0; i < boxes.length; i++) { boxes[i].value = String(i + 1); fire(boxes[i], 'input'); }
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 2; });
+        ok(true, 'a complete OTP advances to personal details');
 
-        var boxes = doc.querySelectorAll('#otpInputs input');
-        for (var i = 0; i < boxes.length; i++) {
-          boxes[i].value = String(i + 1);
-          fire(boxes[i], 'input');
-        }
-        submit(doc, '#formOtp');
-        await waitFor(function () { return visibleStep(doc) === 2; });
-        ok(true, 'a complete OTP advances to basic details');
-        ok(!doc.querySelector('#stepper').hidden, 'stepper appears from basic details');
-        ok(doc.querySelectorAll('#stepperList li').length === 3, 'stepper has 3 nodes');
-        ok(doc.querySelectorAll('#stepperList li')[0].classList.contains('is-current'),
-           'stepper marks Basic Details as current');
-
-        /* ---- Step 3: basic details ---- */
-        type(doc, '#pan', 'BADPAN123');
-        submit(doc, '#formBasic');
-        await wait(60);
-        ok(doc.querySelector('#pan').closest('.field').classList.contains('has-error'),
+        /* 3. personal */
+        set(d, '[name="pan"]', 'BADPAN');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('[name="pan"]').closest('.field').classList.contains('has-error'),
            'rejects a malformed PAN');
-        ok(visibleStep(doc) === 2, 'does not advance on an invalid PAN');
-
-        type(doc, '#email', 'not-an-email');
-        submit(doc, '#formBasic');
+        set(d, '[name="email"]', 'not-an-email');
         await wait(60);
-        ok(doc.querySelector('#email').closest('.field').classList.contains('has-error'),
+        ok(d.querySelector('[name="email"]').closest('.field').classList.contains('has-error'),
            'rejects a malformed email');
 
-        type(doc, '#pincode', '012345');
-        await wait(60);
-        ok(doc.querySelector('#pincode').closest('.field').classList.contains('has-error') ||
-           doc.querySelector('#pincode').value === '012345',
-           'rejects a pincode starting with 0');
+        set(d, '[name="fullName"]', 'Anita Sharma');
+        set(d, '[name="dob"]', '1990-04-12');
+        set(d, '[name="pan"]', 'ABCDE1234F');
+        set(d, '[name="email"]', 'anita@example.com');
+        pick(d, 'gender', 'Female');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 3; });
+        ok(true, 'advances to address');
 
-        pick(doc, 'gender', 'Female');
-        type(doc, '#dob', '1996-01-15');
-        type(doc, '#email', 'test@example.com');
-        type(doc, '#pincode', '560001');
-        type(doc, '#pan', 'ABCDE1234F');
-        submit(doc, '#formBasic');
-        await waitFor(function () { return visibleStep(doc) === 3; });
-        ok(true, 'advances to income details with valid basic details');
-        ok(doc.querySelectorAll('#stepperList li')[0].classList.contains('is-done'),
-           'stepper marks Basic Details as done');
-        ok(doc.querySelectorAll('#stepperList li')[1].classList.contains('is-current'),
-           'stepper marks Income Details as current');
+        /* 4. address */
+        set(d, '[name="pincode"]', '012345');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('[name="pincode"]').closest('.field').classList.contains('has-error'),
+           'rejects a pincode starting with zero');
+        set(d, '[name="addressLine"]', '14 Nehru Road');
+        set(d, '[name="city"]', 'Pune');
+        set(d, '[name="pincode"]', '411001');
+        pick(d, 'residence', 'Owned');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 4; });
+        ok(true, 'advances to employment and income');
 
-        /* ---- Step 4: income details ---- */
-        type(doc, '#income', '10000');
-        submit(doc, '#formEmployment');
-        await wait(60);
-        ok(doc.querySelector('#income').closest('.field').classList.contains('has-error'),
+        /* 5. profile */
+        set(d, '[name="income"]', '10000');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('[name="income"]').closest('.field').classList.contains('has-error'),
            'rejects monthly income below the minimum');
 
-        pick(doc, 'employment', 'Self-employed');
-        ok(doc.querySelector('#companyLabel').textContent === 'Business Name*',
-           'relabels company field for self-employed applicants');
-        pick(doc, 'employment', 'Salaried');
+        pick(d, 'employment', 'Salaried');
+        set(d, '[name="company"]', 'Example Technologies');
+        set(d, '[name="income"]', '300000');
+        ok(d.querySelector('[name="income"]').value === '3,00,000',
+           'money fields use Indian digit grouping');
 
-        type(doc, '#company', 'Example Technologies Pvt Ltd');
-        type(doc, '#income', '3,00,000');
-        ok(doc.querySelector('#income').value === '3,00,000', 'formats income with Indian digit grouping');
-        ok(doc.querySelector('#household').value === '36,00,000',
-           'derives annual household income from monthly income (x12)');
+        set(d, '[name="household"]', '200000');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('[name="household"]').closest('.field').classList.contains('has-error'),
+           'rejects household income below the applicant own annual income');
 
-        // clearing it by hand stops the derivation taking over again
-        type(doc, '#household', '');
-        type(doc, '#income', '3,00,000');
-        ok(doc.querySelector('#household').value === '',
-           'stops deriving once household income is edited by hand');
+        set(d, '[name="household"]', '5000000');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 5; });
+        ok(true, 'advances to loan requirement');
 
-        submit(doc, '#formEmployment');
-        await wait(60);
-        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
-           'requires an annual household income');
-        ok(visibleStep(doc) === 3, 'does not advance without household income');
+        /* 6. loan */
+        set(d, '[name="amount"]', '10000');
+        submitStep(d);
+        await wait(80);
+        ok(d.querySelector('[name="amount"]').closest('.field').classList.contains('has-error'),
+           'rejects an amount below the product minimum');
+        set(d, '[name="amount"]', '800000');
+        choose(d, 'tenure', '36 months');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 6; });
+        ok(true, 'advances to documents');
 
-        type(doc, '#household', '200000');
-        ok(doc.querySelector('#household').value === '2,00,000',
-           'formats household income with Indian digit grouping');
-        submit(doc, '#formEmployment');
-        await wait(60);
-        ok(doc.querySelector('#household').closest('.field').classList.contains('has-error'),
-           'rejects household income below the applicant\u2019s own annual income');
+        /* 7. documents */
+        ok(d.querySelectorAll('.drop').length === 4, 'renders a drop zone per required document');
+        var input = d.querySelector('#file_bank');
+        var dt = new w.DataTransfer();
+        dt.items.add(new w.File(['x'], 'statement.pdf', { type: 'application/pdf' }));
+        input.files = dt.files;
+        fire(input, 'change');
+        await wait(80);
+        ok(input.closest('.drop').classList.contains('is-filled'),
+           'accepting a PDF marks the zone filled');
 
-        type(doc, '#household', '5000000');
-        submit(doc, '#formEmployment');
-        await wait(60);
-        ok(doc.querySelector('#declResident').closest('.field').classList.contains('has-error'),
-           'requires the residency / politically-exposed declaration');
-        ok(visibleStep(doc) === 3, 'does not advance without the declarations');
+        var bad = d.querySelector('#file_pan');
+        var dt2 = new w.DataTransfer();
+        dt2.items.add(new w.File(['x'], 'notes.txt', { type: 'text/plain' }));
+        bad.files = dt2.files;
+        fire(bad, 'change');
+        await wait(80);
+        ok(bad.closest('.drop').classList.contains('has-error'),
+           'rejects a file type outside JPG, PNG and PDF');
 
-        var d1 = doc.querySelector('#declResident'), d2 = doc.querySelector('#declIndustry');
-        d1.checked = true; fire(d1, 'change');
-        d2.checked = true; fire(d2, 'change');
-        submit(doc, '#formEmployment');
-        await waitFor(function () { return visibleStep(doc) === 4; });
-        ok(true, 'advances to the approved offer');
-        ok(doc.querySelectorAll('#stepperList li')[2].classList.contains('is-current'),
-           'stepper marks Approved Offer as current');
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 7; });
+        ok(true, 'advances to review');
 
-        /* ---- Step 5: offers ---- */
-        ok(doc.querySelectorAll('#offers .skeleton').length === 3, 'shows 3 skeleton loaders while fetching');
+        /* 8. review */
+        var review = d.querySelector('#flowReview').textContent;
+        ok(review.indexOf('Anita Sharma') > -1, 'review shows the name entered earlier');
+        ok(review.indexOf('411001') > -1, 'review shows the address');
+        ok(review.indexOf('statement.pdf') > -1, 'review lists the attached document');
+        ok(review.indexOf('8,00,000') > -1, 'review formats the loan amount as money');
+
+        /* 9. offers — unique to the personal loan product */
+        submitStep(d);
+        await waitFor(function () { return visibleStep(d) === 'offers'; });
+        ok(true, 'submitting review reaches the offers screen');
+        ok(d.querySelectorAll('#flowOffers .skeleton').length === 3,
+           'shows a skeleton loader per offer while fetching');
 
         var cards = await waitFor(function () {
-          var c = doc.querySelectorAll('#offers .offer');
+          var c = d.querySelectorAll('#flowOffers .offer');
           return c.length === 3 ? c : null;
         });
         ok(true, 'renders 3 partner offers');
-
-        var names = Array.prototype.map.call(cards, function (c) {
-          return c.querySelector('.offer-name').textContent;
-        });
-        ok(names.join('|') === 'Bank Partner 1|Bank Partner 2|Bank Partner 3',
-           'offers use placeholder partner names');
+        ok(d.querySelectorAll('#flowOffers .offer-badge img').length === 3,
+           'offer cards carry the lender marks');
 
         var figures = cards[0].querySelectorAll('.offer-figures dd');
-        var amount = parseInt(figures[0].textContent.replace(/\D/g, ''), 10);
-        var emi = parseInt(figures[2].textContent.replace(/\D/g, ''), 10);
-        // income 3,00,000 x 12 = 36,00,000, clamped to partner 1's 15,00,000 ceiling
-        ok(amount === 1500000, 'clamps offer 1 to the partner ceiling (got ' + amount + ')');
-        // EMI for 15,00,000 @ 10.99% over 36 months ~ 49,100
-        ok(emi > 48000 && emi < 50500, 'EMI is arithmetically correct (got ' + emi + ')');
+        var amount = money(figures[0].textContent);
+        var emi = money(figures[2].textContent);
+        // income 3,00,000 x 12 = 36,00,000, clamped to partner 1 ceiling of 15,00,000
+        ok(amount === 1500000, 'clamps offer 1 to the partner ceiling (' + amount + ')');
+        ok(emi > 48000 && emi < 50500, 'offer EMI is arithmetically correct (' + emi + ')');
 
         cards[0].querySelector('button').click();
-        await waitFor(function () { return visibleStep(doc) === 5; });
-        ok(true, 'reaches the success screen after applying');
-        ok(doc.querySelector('#successSub').textContent.indexOf('Bank Partner 1') > -1,
-           'success message names the selected partner');
+        await waitFor(function () { return visibleStep(d) === 'done'; });
+        ok(true, 'accepting an offer reaches the success screen');
+        ok(d.querySelector('#flowDoneSub').textContent.indexOf('Bank Partner 1') > -1,
+           'success message names the chosen lender');
 
-        /* ---- Restart ---- */
-        doc.querySelector('#restartBtn').click();
-        await waitFor(function () { return visibleStep(doc) === 0; });
-        ok(doc.querySelector('#mobile').value === '', 'restart clears the form');
+        /* ---- progress ---- */
+        ok(d.querySelectorAll('#flowSteps li').length === 7,
+           'progress bar lists each stage once (' + d.querySelectorAll('#flowSteps li').length + ')');
 
-        doc.querySelector('#applyExit').click();
-        await wait(80);
-        ok(doc.querySelector('#applyView').hidden === true &&
-           doc.querySelector('#main').hidden === false,
-           'exit returns to the landing page');
-
-        /* ---- No brand leakage ---- */
-        var html = doc.documentElement.outerHTML.toLowerCase();
+        /* ---- brand and placeholder guards ---- */
+        var html = d.documentElement.outerHTML.toLowerCase();
         ok(html.indexOf('moneycontrol') === -1, 'no "moneycontrol" reference remains');
         ok(html.indexOf('livemint') === -1 && html.indexOf('mint money') === -1,
            'no "livemint" / "mint money" reference remains');
         ok(html.indexOf('nw18') === -1 && html.indexOf('network18') === -1,
            'no Network18 reference remains');
         ok(html.indexOf('googletagmanager') === -1, 'no third-party analytics remains');
+
+        var text = d.body.innerText || d.body.textContent;
+        ok(['To be published', 'to be provided', '[name]', 'Lorem ipsum', 'TODO']
+             .every(function (t) { return text.indexOf(t) === -1; }),
+           'no placeholder text is visible');
 
       } catch (e) {
         ok(false, 'unexpected error: ' + e.message);

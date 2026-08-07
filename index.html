@@ -35,6 +35,9 @@
 <link rel="preload" as="image" href="assets/brand/logo-640.png">
 <link rel="preload" as="image" href="assets/brand/hero-illustration.svg">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/loan.css">
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Will checking my offers affect my credit score?", "acceptedAnswer": {"@type": "Answer", "text": "No. Seeing what you qualify for is a soft check. A hard enquiry is raised only when you accept an offer and the lender formally underwrites it."}}, {"@type": "Question", "name": "How soon can the money reach me?", "acceptedAnswer": {"@type": "Answer", "text": "Once a lender sanctions and you complete their verification, disbursal is usually same or next working day. Incomplete documents are the usual delay."}}, {"@type": "Question", "name": "What interest rate will I get?", "acceptedAnswer": {"@type": "Answer", "text": "It depends on your credit history, income and the lender. The range on our panel starts at 9.99% p.a. and rises from there — the calculator above lets you model any rate."}}, {"@type": "Question", "name": "Can I repay the loan early?", "acceptedAnswer": {"@type": "Answer", "text": "On most partner products, yes, after the first few instalments. Some charge a foreclosure fee. The exact terms are in the sanction letter, so read that section before signing."}}, {"@type": "Question", "name": "Do I need a guarantor or collateral?", "acceptedAnswer": {"@type": "Answer", "text": "No. These are unsecured personal loans, so nothing of yours is pledged. That is also why the rate sits above a secured loan."}}, {"@type": "Question", "name": "What if my application is declined?", "acceptedAnswer": {"@type": "Answer", "text": "A decline is the lender’s decision, not ours, and usually comes down to credit history, income or existing obligations. You can reapply once the underlying reason has changed."}}]}</script>
 </head>
 
 <body>
@@ -118,13 +121,93 @@
           Over 20,000 borrowers funded so far
         </p>
 
-        <button class="btn btn-primary btn-hero" data-open-apply>Check Offers</button>
+        <button class="btn btn-primary btn-hero" id="heroCta" data-open-apply>Check Offers</button>
       </div>
 
       <div class="hero-art">
         <img src="assets/brand/hero-illustration.svg" width="640" height="560"
              alt="A phone showing an approved instant loan beside a stack of banknotes">
       </div>
+    </div>
+  </section>
+
+
+  <!-- ============ EMI CALCULATOR ============ -->
+  <section class="section section-alt" id="emi">
+    <div class="container">
+      <h2 class="section-title" data-reveal>What will it cost?</h2>
+      <p class="section-sub" data-reveal>Move the sliders to see the instalment and the total interest.</p>
+
+      <div class="calc-grid" id="emiCalc" data-reveal>
+        <div class="calc-panel">
+          <div class="calc-row">
+            <div class="calc-head"><label for="calcAmount">Loan amount</label>
+              <output id="calcAmountOut" for="calcAmount"></output></div>
+            <input type="range" id="calcAmount" aria-label="Loan amount">
+          </div>
+          <div class="calc-row">
+            <div class="calc-head"><label for="calcRate">Interest rate</label>
+              <output id="calcRateOut" for="calcRate"></output></div>
+            <input type="range" id="calcRate" aria-label="Interest rate">
+          </div>
+          <div class="calc-row">
+            <div class="calc-head"><label for="calcTenure">Tenure</label>
+              <output id="calcTenureOut" for="calcTenure"></output></div>
+            <input type="range" id="calcTenure" aria-label="Tenure">
+          </div>
+        </div>
+
+        <div class="calc-out">
+          <p class="calc-emi-label">Monthly instalment</p>
+          <p class="calc-emi" id="calcEmi">&mdash;</p>
+          <div class="calc-split" id="calcSplit" role="img"></div>
+          <p class="calc-legend"><span><i class="i-p"></i>Principal</span><span><i class="i-i"></i>Interest</span></p>
+          <dl class="calc-rows">
+            <div><dt>Total interest</dt><dd id="calcInterest">&mdash;</dd></div>
+            <div><dt>Total repayable</dt><dd id="calcTotal">&mdash;</dd></div>
+          </dl>
+          <p class="calc-foot">Indicative only. Your rate depends on the lender&rsquo;s assessment, and
+            processing fees are not included here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ELIGIBILITY ============ -->
+  <section class="section" id="eligibility">
+    <div class="container">
+      <h2 class="section-title" data-reveal>How much could you borrow?</h2>
+      <p class="section-sub" data-reveal>A rough figure based on what your income supports today.</p>
+
+      <div class="elig-grid" id="eligCalc" data-reveal>
+        <div class="calc-panel">
+          <div class="field outlined has-rupee">
+            <label for="eligIncome" id="eligIncomeLabel">Net monthly income</label>
+            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
+            <input type="text" id="eligIncome" inputmode="numeric">
+          </div>
+          <div class="field outlined has-rupee" style="margin-top:22px">
+            <label for="eligObligations">Existing EMIs per month</label>
+            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
+            <input type="text" id="eligObligations" inputmode="numeric">
+          </div>
+        </div>
+        <div class="elig-result" id="eligResult" aria-live="polite">
+          <p class="cap">You could be eligible for around</p>
+          <p class="elig-amount" id="eligAmount">&mdash;</p>
+          <p class="elig-note" id="eligNote"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TENURE COMPARISON ============ -->
+  <section class="section section-alt" id="compare">
+    <div class="container">
+      <h2 class="section-title" data-reveal>Shorter term or smaller instalment?</h2>
+      <p class="section-sub" data-reveal>The same amount over three tenures. A longer term lowers the
+        monthly figure and raises what you pay overall.</p>
+      <ul class="cmp-grid" id="compareGrid" role="list"></ul>
     </div>
   </section>
 
@@ -213,6 +296,92 @@
       <p class="lead-disclaimer">
         The quotes above are illustrative samples, not statements from identifiable customers.
       </p>
+    </div>
+  </section>
+
+
+  <!-- ============ DOCUMENT CHECKLIST ============ -->
+  <section class="section" id="documents">
+    <div class="container">
+      <h2 class="section-title" data-reveal>What to have ready</h2>
+      <p class="section-sub" data-reveal>Gathering these first is the single biggest thing you can do
+        to speed up a decision.</p>
+      <ul class="doc-list" id="docList" role="list"></ul>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section section-alt" id="faq">
+    <div class="container">
+      <h2 class="section-title" data-reveal>Questions people ask</h2>
+      <div class="faq-list" data-accordion>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="0">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp0">
+              Will checking my offers affect my credit score?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp0"><div><p>No. Seeing what you qualify for is a soft check. A hard enquiry is raised only when you accept an offer and the lender formally underwrites it.</p></div></div>
+        </div>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="50">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp1">
+              How soon can the money reach me?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp1"><div><p>Once a lender sanctions and you complete their verification, disbursal is usually same or next working day. Incomplete documents are the usual delay.</p></div></div>
+        </div>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="100">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp2">
+              What interest rate will I get?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp2"><div><p>It depends on your credit history, income and the lender. The range on our panel starts at 9.99% p.a. and rises from there — the calculator above lets you model any rate.</p></div></div>
+        </div>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="150">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp3">
+              Can I repay the loan early?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp3"><div><p>On most partner products, yes, after the first few instalments. Some charge a foreclosure fee. The exact terms are in the sanction letter, so read that section before signing.</p></div></div>
+        </div>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="200">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp4">
+              Do I need a guarantor or collateral?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp4"><div><p>No. These are unsecured personal loans, so nothing of yours is pledged. That is also why the rate sits above a secured loan.</p></div></div>
+        </div>
+        <div class="faq-item" data-acc-item data-reveal data-reveal-delay="250">
+          <h3>
+            <button class="faq-trigger" type="button" data-acc-trigger aria-expanded="false" aria-controls="faqp5">
+              What if my application is declined?
+              <span class="chev" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </button>
+          </h3>
+          <div class="faq-panel" id="faqp5"><div><p>A decline is the lender’s decision, not ours, and usually comes down to credit history, income or existing obligations. You can reapply once the underlying reason has changed.</p></div></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -363,11 +532,21 @@
   </div>
 </footer>
 
+<div class="sticky-cta" id="stickyCta">
+  <div class="container sticky-inner">
+    <div class="sticky-copy">
+      <strong>Personal loans up to &#8377;50 Lakhs</strong>
+      <span>Interest from 9.99% p.a. &middot; no impact on your credit score</span>
+    </div>
+    <button class="btn btn-primary" data-open-apply>Check Offers</button>
+  </div>
+</div>
+
 <!-- ============ APPLICATION VIEW (full page) ============ -->
-<section class="apply-view" id="applyView" aria-labelledby="applyViewTitle" hidden>
+<section class="apply-view" id="applyView" aria-labelledby="applyTitle" hidden>
   <header class="apply-header">
     <div class="container apply-header-inner">
-      <a class="brand" href="/" aria-label="Activ Paisa — home">
+      <a class="brand" href="index.html" aria-label="Activ Paisa — home">
         <img src="assets/brand/logo-640.png" width="640" height="142" alt="Activ Paisa" class="brand-logo">
       </a>
       <button class="apply-exit" type="button" id="applyExit" aria-label="Leave the application">
@@ -375,253 +554,24 @@
       </button>
     </div>
   </header>
-
-  <h1 class="sr-only" id="applyViewTitle">Personal loan application</h1>
-
+  <h1 class="sr-only" id="applyTitle">Personal loan application</h1>
   <div class="apply-body container" id="applyCard">
-
-    <!-- 3-node stepper: Basic Details / Income Details / Approved Offer -->
-    <div class="stepper-shell" id="stepper" hidden>
-      <ol class="stepper" id="stepperList" role="list"></ol>
+    <div class="flow-progress" id="flowProgress">
+      <div class="flow-track" id="flowBar" role="progressbar" aria-valuemin="1" aria-valuemax="7"
+           aria-valuenow="1" aria-label="Application progress">
+        <span class="flow-fill" id="flowFill"></span>
+      </div>
+      <ol class="flow-steps" id="flowSteps"></ol>
     </div>
-
-    <!-- Step 1 — Mobile -->
-    <section class="step step-narrow" data-step="0" aria-labelledby="s0h">
-      <div class="capture-card">
-        <h2 class="capture-title" id="s0h">See your offers in minutes</h2>
-
-        <form id="formMobile" novalidate>
-          <div class="capture-inner">
-            <div class="field">
-              <label for="mobile" class="sr-only">Mobile number</label>
-              <div class="input-wrap has-prefix">
-                <span class="prefix" aria-hidden="true">+91</span>
-                <input id="mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel-national"
-                       maxlength="10" placeholder="Enter Mobile number*"
-                       aria-describedby="mobile-err" required>
-              </div>
-              <p class="error" id="mobile-err" role="alert"></p>
-            </div>
-
-            <button class="btn btn-primary btn-block btn-lg" type="submit">Apply Now</button>
-          </div>
-
-          <!-- consent lives inside the form so validateForm() actually sees it -->
-          <div class="field consent-row">
-            <input type="checkbox" id="consent" name="consent" class="tick-box"
-                   aria-describedby="consent-err" required>
-            <label for="consent">
-              By continuing I accept the <a href="#privacy">Privacy Policy</a> and
-              <a href="#terms">Terms and Conditions</a> of Activ Paisa and its
-              <a href="#partners">Lending Partners</a>. I permit them to retrieve, hold and check
-              my credit record with the bureaus, and to reach me by SMS, e-mail or WhatsApp.
-              English is my preferred language for these communications.
-            </label>
-            <p class="error" id="consent-err" role="alert"></p>
-          </div>
-        </form>
-      </div>
-
-      <p class="fineprint">Looking at your offers leaves your credit score untouched.</p>
-    </section>
-
-    <!-- Step 2 — OTP -->
-    <section class="step step-narrow" data-step="1" aria-labelledby="s1h" hidden>
-      <div class="capture-card">
-        <h2 class="capture-title" id="s1h">Confirm it&rsquo;s you</h2>
-        <p class="capture-sub">
-          We&rsquo;ve texted a 6-digit code to <strong id="otpTarget">your mobile</strong>.
-          <button type="button" class="linklike" data-goto="0">Change</button>
-        </p>
-
-        <form id="formOtp" novalidate>
-          <div class="field">
-            <label for="otp-0" class="sr-only">Enter the 6 digit verification code</label>
-            <div class="otp-inputs" id="otpInputs" aria-describedby="otp-err">
-              <input id="otp-0" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
-              <input id="otp-1" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
-              <input id="otp-2" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
-              <input id="otp-3" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
-              <input id="otp-4" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5">
-              <input id="otp-5" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6">
-            </div>
-            <p class="error" id="otp-err" role="alert"></p>
-          </div>
-
-          <p class="resend">
-            <button type="button" class="linklike" id="resendBtn" disabled>Resend OTP</button>
-            <span id="resendTimer" aria-live="polite"></span>
-          </p>
-
-          <button class="btn btn-primary btn-block btn-lg" type="submit">Verify OTP</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- Step 3 — Basic details -->
-    <section class="step" data-step="2" aria-labelledby="s2h" hidden>
-      <h2 class="form-title" id="s2h">A few details to find your best offer</h2>
-
-      <form id="formBasic" novalidate>
-        <div class="form-grid">
-
-          <fieldset class="field span-2-left">
-            <legend>Gender</legend>
-            <div class="choice-row" role="radiogroup" aria-describedby="gender-err">
-              <label class="choice">
-                <input type="radio" name="gender" value="Male" required>
-                <span class="choice-face"><span class="choice-label">Male</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="gender" value="Female">
-                <span class="choice-face"><span class="choice-label">Female</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-            </div>
-            <p class="error" id="gender-err" role="alert"></p>
-          </fieldset>
-
-          <div class="field outlined">
-            <label for="email">Email Address*</label>
-            <input id="email" name="email" type="email" autocomplete="email" inputmode="email"
-                   aria-describedby="email-err" required>
-            <p class="error" id="email-err" role="alert"></p>
-          </div>
-
-          <div class="field outlined">
-            <label for="dob">DOB (DD/MM/YYYY)*</label>
-            <input id="dob" name="dob" type="date" autocomplete="bday" aria-describedby="dob-err" required>
-            <p class="error" id="dob-err" role="alert"></p>
-          </div>
-
-          <div class="field outlined">
-            <label for="pincode">Pincode*</label>
-            <input id="pincode" name="pincode" type="text" inputmode="numeric" autocomplete="postal-code"
-                   maxlength="6" aria-describedby="pincode-err" required>
-            <p class="error" id="pincode-err" role="alert"></p>
-          </div>
-
-          <div class="field outlined">
-            <label for="pan">PAN*</label>
-            <input id="pan" name="pan" type="text" maxlength="10" placeholder="ABCDE1234F"
-                   autocapitalize="characters" spellcheck="false" aria-describedby="pan-err" required>
-            <p class="error" id="pan-err" role="alert"></p>
-          </div>
-
-        </div>
-
-        <p class="verify-note">
-          <span class="note-icon" aria-hidden="true">?</span>
-          Worth a quick check &mdash; corrections after submission take longer.
-        </p>
-
-        <div class="actions actions-center">
-          <button class="btn btn-ghost" type="button" data-back>Back</button>
-          <button class="btn btn-primary btn-wide" type="submit">Proceed</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Step 4 — Income details -->
-    <section class="step" data-step="3" aria-labelledby="s3h" hidden>
-      <h2 class="sr-only" id="s3h">Income details</h2>
-
-      <form id="formEmployment" novalidate>
-        <div class="form-grid">
-
-          <fieldset class="field span-2-left">
-            <legend>How you earn</legend>
-            <div class="choice-row" role="radiogroup" aria-describedby="employment-err">
-              <label class="choice">
-                <input type="radio" name="employment" value="Salaried" required>
-                <span class="choice-face"><span class="choice-label">Salaried</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="employment" value="Self-employed">
-                <span class="choice-face"><span class="choice-label">Self-employed</span><span class="choice-dot" aria-hidden="true"></span></span>
-              </label>
-            </div>
-            <p class="error" id="employment-err" role="alert"></p>
-          </fieldset>
-
-          <div class="field outlined">
-            <label for="company" id="companyLabel">Company Name*</label>
-            <input id="company" name="company" type="text" autocomplete="organization" maxlength="80"
-                   aria-describedby="company-err" required>
-            <p class="error" id="company-err" role="alert"></p>
-          </div>
-
-          <div class="field outlined has-rupee">
-            <label for="income">Monthly Income*</label>
-            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
-            <input id="income" name="income" type="text" inputmode="numeric"
-                   aria-describedby="income-err" required>
-            <p class="error" id="income-err" role="alert"></p>
-          </div>
-
-          <div class="field outlined has-rupee">
-            <label for="household">Annual Household Income*</label>
-            <span class="rupee-prefix" aria-hidden="true">&#8377;</span>
-            <input id="household" name="household" type="text" inputmode="numeric"
-                   aria-describedby="household-err" required>
-            <p class="error" id="household-err" role="alert"></p>
-          </div>
-
-        </div>
-
-        <div class="actions actions-center">
-          <button class="btn btn-ghost" type="button" data-back>Back</button>
-          <button class="btn btn-primary btn-wide" type="submit">Get Offer Now</button>
-        </div>
-
-        <div class="declarations">
-          <div class="field consent-row">
-            <input type="checkbox" id="declResident" name="declResident" class="tick-box"
-                   aria-describedby="declResident-err" required>
-            <label for="declResident">
-              I accept the <a href="#privacy">Privacy Policy</a> and
-              <a href="#terms">Terms and Conditions</a> of Activ Paisa and its
-              <a href="#partners">Partners</a>, and declare that I reside in India and am not a
-              politically exposed person.
-            </label>
-            <p class="error" id="declResident-err" role="alert"></p>
-          </div>
-
-          <div class="field consent-row">
-            <input type="checkbox" id="declIndustry" name="declIndustry" class="tick-box"
-                   aria-describedby="declIndustry-err" required>
-            <label for="declIndustry">
-              I declare that neither my employer&rsquo;s industry nor my own role appears on the
-              <a href="#terms">restricted list</a>.
-            </label>
-            <p class="error" id="declIndustry-err" role="alert"></p>
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <!-- Step 5 — Approved offer -->
-    <section class="step" data-step="4" aria-labelledby="s4h" hidden>
-      <h2 class="form-title" id="s4h">Offers you qualify for</h2>
-      <p class="form-sub" id="offersSub">Choose one to carry on.</p>
-      <div class="offers" id="offers" aria-live="polite"></div>
-    </section>
-
-    <!-- Success -->
-    <section class="step step-narrow step-success" data-step="5" aria-labelledby="s5h" hidden>
-      <div class="success-mark" aria-hidden="true">
-        <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-16"/></svg>
-      </div>
-      <h2 class="form-title" id="s5h">That&rsquo;s gone through</h2>
-      <p class="form-sub" id="successSub"></p>
-      <button class="btn btn-ghost btn-block" type="button" id="restartBtn">Begin another application</button>
-    </section>
-
   </div>
 </section>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 
+<script src="js/core.js"></script>
 <script src="js/constants.js"></script>
-<script src="js/app.js"></script>
+<script src="js/products.js"></script>
+<script src="js/loan-page.js"></script>
+<script src="js/index-page.js"></script>
 </body>
 </html>

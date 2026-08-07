@@ -13,60 +13,6 @@ var AP = (function () {
     supportPhone: '1800 000 000'
   };
 
-  /* ---------- Flow ----------
-     Screen order: mobile → OTP → basic details → income details → offer.
-     Mobile and OTP sit ahead of the stepper, so only the last three screens
-     map onto a stepper node. */
-  var STEP = { MOBILE: 0, OTP: 1, BASIC: 2, EMPLOYMENT: 3, OFFERS: 4, SUCCESS: 5 };
-
-  var STEPPER = ['Basic Details', 'Income Details', 'Approved Offer'];
-
-  var STEPPER_NODE = {};
-  STEPPER_NODE[STEP.BASIC] = 0;
-  STEPPER_NODE[STEP.EMPLOYMENT] = 1;
-  STEPPER_NODE[STEP.OFFERS] = 2;
-  STEPPER_NODE[STEP.SUCCESS] = 2;
-
-  /* ---------- Timings (ms) ---------- */
-  var TIMING = {
-    submitDelay: 900,   // simulated network latency
-    offersDelay: 1400,  // simulated offer fetch
-    resendSeconds: 30,
-    toastLife: 4000
-  };
-
-  /* ---------- Eligibility rules ---------- */
-  var RULES = {
-    minAge: 21,
-    maxAge: 60,
-    minMonthlyIncome: 15000,
-    minHouseholdIncome: 100000,
-    otpLength: 6
-  };
-
-  /* ---------- Validation patterns ---------- */
-  var PATTERNS = {
-    mobile: /^[6-9]\d{9}$/,
-    pan: /^[A-Z]{5}[0-9]{4}[A-Z]$/,
-    email: /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/,
-    pincode: /^[1-9]\d{5}$/,
-    company: /^[A-Za-z0-9][A-Za-z0-9 .,&()'-]{1,79}$/,
-    digits: /^\d+$/
-  };
-
-  /* ---------- Offer catalogue ----------
-     Placeholder partners. Amounts are illustrative and recalculated against the
-     applicant's declared income in app.js.
-     TODO: replace with live offers from the lending partner API. */
-  var OFFERS = [
-    { id: 'bp1', logo: 'assets/brand/partners/p1.svg', name: 'Bank Partner 1', tag: 'NBFC · Personal Loan', badge: 'B1',
-      rate: 10.99, tenure: 36, multiple: 12, cap: 1500000, pill: 'Lowest EMI' },
-    { id: 'bp2', logo: 'assets/brand/partners/p2.svg', name: 'Bank Partner 2', tag: 'Bank · Personal Loan', badge: 'B2',
-      rate: 12.50, tenure: 24, multiple: 15, cap: 2000000, pill: 'Instant disbursal' },
-    { id: 'bp3', logo: 'assets/brand/partners/p3.svg', name: 'Bank Partner 3', tag: 'NBFC · Personal Loan', badge: 'B3',
-      rate: 14.25, tenure: 48, multiple: 18, cap: 1000000, pill: 'Highest amount' }
-  ];
-
   /* ---------- Lending partners ----------
      Partner contact details are not published on the card. Each lender's own
      grievance route is reachable through its Grievance Redressal link, so
@@ -114,8 +60,7 @@ var AP = (function () {
   ];
 
   return {
-    BRAND: BRAND, STEP: STEP, STEPPER: STEPPER, STEPPER_NODE: STEPPER_NODE, TIMING: TIMING,
-    RULES: RULES, PATTERNS: PATTERNS, OFFERS: OFFERS,
+    BRAND: BRAND,
     PARTNERS: PARTNERS, DLA_PARTNERS: DLA_PARTNERS, REVIEWS: REVIEWS
   };
 })();
