@@ -369,6 +369,26 @@
   maskMoney($('#household'));
   bindLiveValidation(formEmployment);
 
+  /* Annual household income defaults to monthly x 12, but the household may earn
+     more than the applicant — so once it is edited by hand we stop overwriting it.
+     Programmatic value changes do not fire 'input', so this only trips on real typing. */
+  (function deriveHousehold() {
+    var income = $('#income');
+    var household = $('#household');
+    var editedByHand = false;
+
+    household.addEventListener('input', function () { editedByHand = true; });
+
+    income.addEventListener('input', function () {
+      if (editedByHand) return;
+      var monthly = parseInt(digitsOnly(income.value), 10);
+      household.value = monthly ? inr.format(monthly * 12) : '';
+      if (fieldOf(household).classList.contains('has-error')) validators.household(household);
+    });
+
+    state.resetHousehold = function () { editedByHand = false; };
+  })();
+
   // Self-employed applicants name a business, not an employer.
   $$('input[name="employment"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
@@ -586,6 +606,7 @@
       $$('.error', f).forEach(function (e) { e.textContent = ''; });
     });
     state.data = {};
+    state.resetHousehold();
     clearInterval(state.resendId);
     goTo(STEP.MOBILE);
   });

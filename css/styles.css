@@ -380,6 +380,27 @@ ul, ol { list-style: none; padding: 0; }
 .review-author span { font-size: .78rem; color: var(--ink-3); }
 
 /* ==========================================================================
+   App download
+   ========================================================================== */
+.app-section { background: var(--bg); }
+.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.app-copy h2 { font-size: clamp(1.35rem, 2.8vw, 1.85rem); line-height: 1.35; }
+.app-arrow { width: 100%; max-width: 340px; height: auto; margin: 10px 0 6px; opacity: .55; }
+
+.store-list { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 18px; }
+.store-badge {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 22px 12px 18px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink);
+}
+.store-badge svg { flex-shrink: 0; color: var(--secondary); }
+.store-badge span { display: flex; flex-direction: column; font-weight: 700; line-height: 1.25; }
+.store-badge small { font-size: .7rem; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+
+.app-art img { width: 100%; max-width: 420px; height: auto; margin-inline: auto; }
+
+/* ==========================================================================
    Support
    ========================================================================== */
 .support-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
@@ -776,6 +797,10 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
 
 @media (max-width: 980px) {
   .hero { padding: 40px 0 60px; }
+  .app-grid { grid-template-columns: 1fr; gap: 28px; text-align: center; }
+  .app-art { order: -1; }
+  .app-arrow { display: none; }
+  .store-list { justify-content: center; }
   .hero-grid { grid-template-columns: 1fr; gap: 36px; }
   .hero-art { order: -1; max-width: 440px; margin-inline: auto; }
   .header-nav { display: none; }

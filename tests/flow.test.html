@@ -90,6 +90,9 @@
            'renders 3 review cards');
         ok(doc.querySelectorAll('.odometer .odo-col').length === 2,
            'builds a 2-digit odometer for the hero amount');
+        ok(doc.querySelectorAll('#app .store-badge').length === 2 &&
+           doc.querySelector('#app').textContent.indexOf('Coming soon') > -1,
+           'app section shows both stores as coming soon');
         ok(doc.querySelector('#applyView').hidden === true,
            'application view starts hidden');
 
@@ -206,6 +209,14 @@
         type(doc, '#company', 'Example Technologies Pvt Ltd');
         type(doc, '#income', '3,00,000');
         ok(doc.querySelector('#income').value === '3,00,000', 'formats income with Indian digit grouping');
+        ok(doc.querySelector('#household').value === '36,00,000',
+           'derives annual household income from monthly income (x12)');
+
+        // clearing it by hand stops the derivation taking over again
+        type(doc, '#household', '');
+        type(doc, '#income', '3,00,000');
+        ok(doc.querySelector('#household').value === '',
+           'stops deriving once household income is edited by hand');
 
         submit(doc, '#formEmployment');
         await wait(60);
