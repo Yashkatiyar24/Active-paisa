@@ -327,6 +327,30 @@ var APCore = (function () {
     }, delay);
   }
 
+  /* ---------- Hero odometer ----------
+     Spins each reel a full lap before landing on its digit. */
+  function odometer(root) {
+    var host = $('.odometer', root || document);
+    if (!host) return;
+    var digits = String(host.dataset.value || '').split('');
+    host.textContent = '';
+
+    digits.forEach(function (digit, i) {
+      var col = el('span', 'odo-col');
+      var list = el('span', 'odo-list');
+      for (var n = 0; n < 20; n++) list.appendChild(el('span', 'odo-d', String(n % 10)));
+      col.appendChild(list);
+      host.appendChild(col);
+
+      var target = 10 + Number(digit);
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          list.style.transform = 'translateY(-' + (target * 100 / 20) + '%)';
+        }, 90 * i);
+      });
+    });
+  }
+
   /* ---------- Mobile menu ---------- */
   function initMenu() {
     var btn = $('#menuBtn');
@@ -353,6 +377,7 @@ var APCore = (function () {
     toast: toast, withLoading: withLoading,
     initReveal: initReveal, stagger: stagger,
     initCarousel: initCarousel, initCarousels: initCarousels, makeSeamless: makeSeamless,
-    initAccordion: initAccordion, initMenu: initMenu, stampYear: stampYear
+    initAccordion: initAccordion, initMenu: initMenu, stampYear: stampYear,
+    odometer: odometer
   };
 })();

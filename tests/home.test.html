@@ -50,8 +50,8 @@
            'renders 2 digital lending partner cards');
         ok(d.querySelectorAll('#reviewTrack .review-card:not([aria-hidden])').length === 3,
            'renders 3 review cards');
-        ok(d.querySelector('.odometer') === null,
-           'the odometer belongs to the personal loan page, not here');
+        ok(d.querySelectorAll('.odometer .odo-col').length === 1,
+           'hero odometer spins the headline amount');
         ok(d.querySelectorAll('#app .store-badge').length === 2 &&
            d.querySelector('#app').textContent.indexOf('Coming soon') > -1,
            'app section shows both stores as coming soon');

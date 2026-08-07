@@ -79,6 +79,7 @@
   renderDla();
   renderReviews();
 
+  C.odometer();
   C.initCarousels();
   C.initAccordion();
   C.initMenu();

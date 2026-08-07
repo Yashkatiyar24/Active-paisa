@@ -983,37 +983,11 @@ var APLoan = (function () {
   }
 
   /* ==========================================================================
-     Hero odometer
-     ========================================================================== */
-  function odometer() {
-    var host = $('.odometer');
-    if (!host) return;
-    var digits = String(host.dataset.value || '').split('');
-    host.textContent = '';
-
-    digits.forEach(function (digit, i) {
-      var col = el('span', 'odo-col');
-      var list = el('span', 'odo-list');
-      // two full runs so the reel spins a lap before landing
-      for (var n = 0; n < 20; n++) list.appendChild(el('span', 'odo-d', String(n % 10)));
-      col.appendChild(list);
-      host.appendChild(col);
-
-      var target = 10 + Number(digit);
-      requestAnimationFrame(function () {
-        setTimeout(function () {
-          list.style.transform = 'translateY(-' + (target * 100 / 20) + '%)';
-        }, 90 * i);
-      });
-    });
-  }
-
-  /* ==========================================================================
      Boot
      ========================================================================== */
   function init(product) {
     state.product = product;
-    odometer();
+    C.odometer();
     initCalculator(product);
     initEligibility(product);
     renderCompare(product);

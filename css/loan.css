@@ -96,19 +96,6 @@
 /* ==========================================================================
    Home page — product chooser
    ========================================================================== */
-.home-ticks { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 0 0 26px; }
-.home-ticks li {
-  display: flex; align-items: center; gap: 9px;
-  font-size: .92rem; color: var(--ink-2);
-}
-.home-ticks li::before {
-  content: ""; flex-shrink: 0;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--success-bg);
-  background-image: linear-gradient(transparent, transparent);
-  border: 1px solid rgba(5, 150, 105, .35);
-}
-
 .prod-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .prod-card {
   display: flex; flex-direction: column;
