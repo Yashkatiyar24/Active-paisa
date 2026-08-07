@@ -778,13 +778,16 @@
      ========================================================================== */
   function partnerCard(p, tag) {
     var li = el('li', 'partner-card');
-    var tile = el('div', 'p-logo');
-    tile.appendChild(img(p.logo, p.name + ' logo', 44));
+    // a lender's own file when supplied, otherwise a neutral initials tile —
+    // never an approximation of their actual mark
+    var tile = el('div', 'p-logo' + (p.logo ? '' : ' is-initials'));
+    if (p.logo) tile.appendChild(img(p.logo, p.name + ' logo', 44));
+    else tile.appendChild(el('span', null, p.initials));
     li.appendChild(tile);
     li.appendChild(el('h3', 'p-name', p.legal));
     li.appendChild(el('span', 'p-tag', 'Personal Loan'));
 
-    var block = el('div', 'p-block');
+    var block = el('div', 'p-block' + (p.pending ? ' is-pending' : ''));
     block.appendChild(el('div', 'p-role', tag));
     block.appendChild(el('strong', null, p.officer));
     block.appendChild(el('div', null, p.email));

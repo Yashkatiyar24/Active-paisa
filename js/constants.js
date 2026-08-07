@@ -68,30 +68,47 @@ var AP = (function () {
   ];
 
   /* ---------- Lending partners ----------
-     Placeholder entries. Grievance contacts use the reserved example.com domain
-     so nothing here can route to a real person.
-     TODO: replace with each lender's real regulatory disclosure before launch. */
+     Lender names confirmed by the business as existing partners.
+
+     Grievance contacts are intentionally left as placeholders: each lender
+     names its own officer in the partnership agreement, and a borrower has to
+     be able to actually reach that person. Inventing one would put a name that
+     does not exist against a regulated institution.
+
+     `logo` is optional — drop the lender's own file into
+     assets/brand/partners/ and set the path, otherwise a neutral initials
+     tile stands in. We do not draw approximations of a lender's mark. */
+  var TBD = { officer: 'To be published', email: 'To be published', phone: 'To be published' };
+
+  function lender(initials, name, legal, extra) {
+    var row = { initials: initials, name: name, legal: legal,
+                officer: TBD.officer, email: TBD.email, phone: TBD.phone, pending: true };
+    if (extra) for (var k in extra) row[k] = extra[k];
+    return row;
+  }
+
   var PARTNERS = [
-    { badge: 'B1', logo: 'assets/brand/partners/p1.svg', name: 'Bank Partner 1', legal: 'Bank Partner 1 Finance Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner1.example', phone: '1800 000 001' },
-    { badge: 'B2', logo: 'assets/brand/partners/p2.svg', name: 'Bank Partner 2', legal: 'Bank Partner 2 Capital Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner2.example', phone: '1800 000 002' },
-    { badge: 'B3', logo: 'assets/brand/partners/p3.svg', name: 'Bank Partner 3', legal: 'Bank Partner 3 Financial Services Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner3.example', phone: '1800 000 003' },
-    { badge: 'B4', logo: 'assets/brand/partners/p4.svg', name: 'Bank Partner 4', legal: 'Bank Partner 4 Fincorp Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner4.example', phone: '1800 000 004' },
-    { badge: 'B5', logo: 'assets/brand/partners/p5.svg', name: 'Bank Partner 5', legal: 'Bank Partner 5 Services Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner5.example', phone: '1800 000 005' },
-    { badge: 'B6', logo: 'assets/brand/partners/p6.svg', name: 'Bank Partner 6', legal: 'Bank Partner 6 Bank Limited',
-      officer: 'Grievance Officer', email: 'grievance@bankpartner6.example', phone: '1800 000 006' }
+    lender('ES', 'EarlySalary',        'EarlySalary Services Private Limited'),
+    lender('AB', 'Aditya Birla',       'Aditya Birla Capital Limited'),
+    lender('LT', 'L&T Finance',        'L&T Finance Limited'),
+    lender('BX', 'Bhanix Finance',     'Bhanix Finance and Investment Limited'),
+    lender('SC', 'Si Creva',           'Si Creva Capital Service Private Limited'),
+    lender('BJ', 'Bajaj Finserv',      'Bajaj Finserv Limited'),
+    lender('IC', 'InCred',             'InCred Financial Services Limited'),
+    lender('PF', 'Poonawalla Fincorp', 'Poonawalla Fincorp Limited'),
+    lender('KB', 'KrazyBee',           'KrazyBee Services Limited'),
+    lender('HB', 'HDFC Bank',          'HDFC Bank Limited'),
+    lender('CS', 'Credit Saison',      'Credit Saison India Private Limited'),
+    lender('OL', 'Olyv',               'Olyv'),
+    lender('ZY', 'Zype',               'Zype'),
+    lender('FP', 'FatakPay',           'FatakPay'),
+    lender('RF', 'Ramfincorp',         'Ramfincorp')
   ];
 
   /* ---------- Digital lending partners ---------- */
   var DLA_PARTNERS = [
-    { badge: 'D1', logo: 'assets/brand/partners/dla1.svg', name: 'Digital Partner 1', legal: 'Digital Partner 1 Technologies Private Limited',
-      officer: 'Nodal Officer', email: 'nodal@digitalpartner1.example', phone: '1800 000 011' },
-    { badge: 'D2', logo: 'assets/brand/partners/dla2.svg', name: 'Digital Partner 2', legal: 'Digital Partner 2 Limited',
-      officer: 'Nodal Officer', email: 'nodal@digitalpartner2.example', phone: '1800 000 012' }
+    lender('DT', 'Dreamplug', 'Dreamplug Technologies Private Limited'),
+    lender('MV', 'Moneyview', 'Moneyview Limited')
   ];
 
   /* TODO: replace with real, consented customer testimonials before launch. */

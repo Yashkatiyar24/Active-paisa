@@ -82,10 +82,16 @@
     (async function run() {
       try {
         /* ---- Landing page ---- */
-        ok(doc.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])').length === 6,
-           'renders 6 lending partner cards');
-        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 6,
+        var realCards = doc.querySelectorAll('#partnerTrack .partner-card:not([aria-hidden])');
+        ok(realCards.length === 15, 'renders all 15 lending partner cards (' + realCards.length + ')');
+        ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden]').length === 15,
            'clones the partner track so the auto-scroll wraps seamlessly');
+        ok(doc.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
+           'partner cards carry the confirmed lender names');
+        ok(doc.querySelectorAll('#partnerTrack .p-logo.is-initials').length > 0,
+           'lenders without a supplied logo fall back to a neutral initials tile');
+        ok(doc.querySelectorAll('#partnerTrack .p-block.is-pending').length > 0,
+           'grievance contacts are flagged as pending rather than invented');
         ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden] a[tabindex="-1"]').length > 0,
            'clones are taken out of the tab order');
         ok(doc.querySelectorAll('#dlaGrid .dla-card').length === 2,
@@ -142,15 +148,15 @@
         /* artwork actually resolves — a broken src leaves naturalWidth at 0 */
         var art = [].slice.call(doc.querySelectorAll(
           '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
-        ok(art.length >= 12, 'logo, avatar and illustration images are all rendered (' + art.length + ')');
+        ok(art.length >= 8, 'logo, avatar and illustration images are all rendered (' + art.length + ')');
         var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
         ok(broken.length === 0,
            'every image resolves' + (broken.length ? ' — broken: ' + broken.map(function (n) {
              return n.getAttribute('src'); }).join(', ') : ''));
         ok(art.every(function (n) { return n.hasAttribute('alt'); }),
            'every image carries an alt attribute');
-        ok(doc.querySelectorAll('.p-logo img[loading="lazy"]').length > 0,
-           'partner logos are lazy-loaded');
+        ok(doc.querySelectorAll('.avatar img[loading="lazy"]').length > 0,
+           'avatar images are lazy-loaded');
         ok(w.getComputedStyle(doc.querySelector('.store-badge span')).flexDirection === 'column',
            'store badge stacks its platform label above the status');
         ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
