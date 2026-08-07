@@ -88,27 +88,27 @@ var AP = (function () {
   }
 
   var PARTNERS = [
-    lender('ES', 'EarlySalary',        'EarlySalary Services Private Limited'),
-    lender('AB', 'Aditya Birla',       'Aditya Birla Capital Limited'),
-    lender('LT', 'L&T Finance',        'L&T Finance Limited'),
-    lender('BX', 'Bhanix Finance',     'Bhanix Finance and Investment Limited'),
-    lender('SC', 'Si Creva',           'Si Creva Capital Service Private Limited'),
-    lender('BJ', 'Bajaj Finserv',      'Bajaj Finserv Limited'),
-    lender('IC', 'InCred',             'InCred Financial Services Limited'),
-    lender('PF', 'Poonawalla Fincorp', 'Poonawalla Fincorp Limited'),
-    lender('KB', 'KrazyBee',           'KrazyBee Services Limited'),
-    lender('HB', 'HDFC Bank',          'HDFC Bank Limited'),
-    lender('CS', 'Credit Saison',      'Credit Saison India Private Limited'),
-    lender('OL', 'Olyv',               'Olyv'),
-    lender('ZY', 'Zype',               'Zype'),
-    lender('FP', 'FatakPay',           'FatakPay'),
-    lender('RF', 'Ramfincorp',         'Ramfincorp')
+    lender('ES', 'EarlySalary',        'EarlySalary Services Private Limited', { logo: 'assets/brand/partners/earlysalary.svg' }),
+    lender('AB', 'Aditya Birla',       'Aditya Birla Capital Limited', { logo: 'assets/brand/partners/aditya-birla.svg' }),
+    lender('LT', 'L&T Finance',        'L&T Finance Limited', { logo: 'assets/brand/partners/lt-finance.svg' }),
+    lender('BX', 'Bhanix Finance',     'Bhanix Finance and Investment Limited', { logo: 'assets/brand/partners/bhanix.svg' }),
+    lender('SC', 'Si Creva',           'Si Creva Capital Service Private Limited', { logo: 'assets/brand/partners/si-creva.svg' }),
+    lender('BJ', 'Bajaj Finserv',      'Bajaj Finserv Limited', { logo: 'assets/brand/partners/bajaj-finserv.svg' }),
+    lender('IC', 'InCred',             'InCred Financial Services Limited', { logo: 'assets/brand/partners/incred.svg' }),
+    lender('PF', 'Poonawalla Fincorp', 'Poonawalla Fincorp Limited', { logo: 'assets/brand/partners/poonawalla.svg' }),
+    lender('KB', 'KrazyBee',           'KrazyBee Services Limited', { logo: 'assets/brand/partners/krazybee.svg' }),
+    lender('HB', 'HDFC Bank',          'HDFC Bank Limited', { logo: 'assets/brand/partners/hdfc-bank.svg' }),
+    lender('CS', 'Credit Saison',      'Credit Saison India Private Limited', { logo: 'assets/brand/partners/credit-saison.svg' }),
+    lender('OL', 'Olyv',               'Olyv', { logo: 'assets/brand/partners/olyv.png' }),
+    lender('ZY', 'Zype',               'Zype', { logo: 'assets/brand/partners/zype.png' }),
+    lender('FP', 'FatakPay',           'FatakPay', { logo: 'assets/brand/partners/fatakpay.svg' }),
+    lender('RF', 'Ramfincorp',         'Ramfincorp', { logo: 'assets/brand/partners/ramfincorp.png' })
   ];
 
   /* ---------- Digital lending partners ---------- */
   var DLA_PARTNERS = [
-    lender('DT', 'Dreamplug', 'Dreamplug Technologies Private Limited'),
-    lender('MV', 'Moneyview', 'Moneyview Limited')
+    lender('DT', 'Dreamplug', 'Dreamplug Technologies Private Limited', { logo: 'assets/brand/partners/dreamplug.svg' }),
+    lender('MV', 'Moneyview', 'Moneyview Limited', { logo: 'assets/brand/partners/moneyview.png' })
   ];
 
   /* TODO: replace with real, consented customer testimonials before launch. */

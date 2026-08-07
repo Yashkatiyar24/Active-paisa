@@ -88,8 +88,8 @@
            'clones the partner track so the auto-scroll wraps seamlessly');
         ok(doc.querySelector('#partnerTrack').textContent.indexOf('HDFC Bank Limited') > -1,
            'partner cards carry the confirmed lender names');
-        ok(doc.querySelectorAll('#partnerTrack .p-logo.is-initials').length > 0,
-           'lenders without a supplied logo fall back to a neutral initials tile');
+        ok(doc.querySelectorAll('#partnerTrack .p-logo img').length > 0,
+           'partner cards render the supplied lender logos');
         ok(doc.querySelectorAll('#partnerTrack .p-block.is-pending').length > 0,
            'grievance contacts are flagged as pending rather than invented');
         ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden] a[tabindex="-1"]').length > 0,
