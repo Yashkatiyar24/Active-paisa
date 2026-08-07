@@ -181,6 +181,8 @@
         await wait(60);
         ok(d.querySelector('#applyView').hidden === false && d.querySelector('#main').hidden === true,
            'Check Offers replaces the landing page with the application');
+        ok(w.getComputedStyle(d.querySelector('#stickyCta')).display === 'none',
+           'sticky apply bar is hidden while the application is open');
         ok(visibleStep(d) === 0, 'starts on the mobile step');
 
         /* 1. mobile */

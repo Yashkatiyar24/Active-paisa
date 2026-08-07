@@ -727,6 +727,7 @@ var APLoan = (function () {
             'Your request for ' + C.money(amount) + ' from ' + offer.name + ' at ' +
             offer.rate.toFixed(2) + '% p.a. — ' + C.money(monthly) + ' a month across ' +
             offer.tenure + ' months — is with the lender. They will be in touch shortly.';
+          stampReference();
           goTo(panels.length - 1);
           C.toast('Application submitted.', 'success');
         });
@@ -761,14 +762,62 @@ var APLoan = (function () {
     ]));
     done.appendChild(mark);
     done.appendChild(el('h2', 'flow-title', 'Application submitted'));
-    done.appendChild(el('p', 'flow-sub', ''));
-    $$('p.flow-sub', done)[0].id = 'flowDoneSub';
+
+    // the thing the applicant actually wants to know: when they will hear back
+    var callout = el('div', 'done-callout');
+    var ring = el('span', 'ring');
+    ring.appendChild(C.svg('0 0 24 24', [
+      { tag: 'circle', cx: '12', cy: '12', r: '9', fill: 'none',
+        stroke: 'currentColor', 'stroke-width': '1.9' },
+      { d: 'M12 7v5.5l3.5 2', fill: 'none', stroke: 'currentColor',
+        'stroke-width': '1.9', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }
+    ], 20));
+    callout.appendChild(ring);
+    var calloutText = el('div');
+    calloutText.appendChild(el('strong', null, 'We will contact you within 24 hours'));
+    calloutText.appendChild(el('span', null, 'On the mobile number you verified'));
+    callout.appendChild(calloutText);
+    done.appendChild(callout);
+
+    var sub = el('p', 'flow-sub', '');
+    sub.id = 'flowDoneSub';
+    done.appendChild(sub);
+
+    var next = el('ol', 'done-next');
+    [['Verification call', 'A partner lender confirms your details and documents.'],
+     ['Sanction letter', 'Read the rate, processing fee and total repayment before accepting.'],
+     ['Disbursal', 'Funds reach your account once the lender completes its checks.']
+    ].forEach(function (row, i) {
+      var li = el('li');
+      li.appendChild(el('span', 'n', String(i + 1)));
+      var body = el('div');
+      body.appendChild(el('strong', null, row[0]));
+      body.appendChild(el('span', null, row[1]));
+      li.appendChild(body);
+      next.appendChild(li);
+    });
+    done.appendChild(next);
+
+    var ref = el('p', 'done-ref');
+    ref.appendChild(document.createTextNode('Reference '));
+    var refCode = el('code', null, '');
+    refCode.id = 'flowRef';
+    ref.appendChild(refCode);
+    done.appendChild(ref);
+
     var again = el('button', 'btn btn-ghost', 'Back to ' + p.name.toLowerCase() + 's');
     again.type = 'button';
     again.addEventListener('click', function () { showApply(false); });
     done.appendChild(again);
     card.appendChild(done);
     panels.push(done);
+
+    /* Short, human-readable handle for the applicant to quote on the phone. */
+    function stampReference() {
+      var tail = (state.data.mobile || '0000').slice(-4);
+      var stamp = Date.now().toString(36).slice(-4).toUpperCase();
+      $('#flowRef').textContent = 'AP-' + tail + '-' + stamp;
+    }
 
     /* ---- OTP behaviour ---- */
     var otpBoxes = $$('#flowOtp input');
@@ -901,8 +950,8 @@ var APLoan = (function () {
             return;
           }
           $('#flowDoneSub').textContent =
-            'Thanks. Your ' + p.name.toLowerCase() + ' application is with our team and a partner ' +
-            'lender will be in touch about next steps.';
+            'Your ' + p.name.toLowerCase() + ' application is with our team. Here is what happens next.';
+          stampReference();
           goTo(panels.length - 1);
           C.toast('Application submitted.', 'success');
         });
