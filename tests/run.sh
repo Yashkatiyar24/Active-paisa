@@ -16,8 +16,9 @@ SERVER=$!
 trap 'kill $SERVER 2>/dev/null || true' EXIT
 sleep 1
 
+run_suite () {
 "$CHROME" --headless=new --disable-gpu --virtual-time-budget=60000 \
-  --dump-dom "http://localhost:$PORT/tests/flow.test.html" 2>/dev/null \
+  --dump-dom "http://localhost:$PORT/tests/$1" 2>/dev/null \
 | python3 -c '
 import sys, re, html
 d = sys.stdin.read()
@@ -32,3 +33,13 @@ if not m:
 print("\n" + summary)
 sys.exit(1 if int(m.group(2)) else 0)
 '
+}
+
+echo "── personal loan ─────────────────────────────"
+run_suite flow.test.html
+A=$?
+echo
+echo "── business loan ─────────────────────────────"
+run_suite loan.test.html
+B=$?
+exit $(( A || B ))
