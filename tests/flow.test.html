@@ -90,8 +90,16 @@
            'partner cards carry the confirmed lender names');
         ok(doc.querySelectorAll('#partnerTrack .p-logo img').length > 0,
            'partner cards render the supplied lender logos');
-        ok(doc.querySelectorAll('#partnerTrack .p-block.is-pending').length > 0,
-           'grievance contacts are flagged as pending rather than invented');
+        ok(doc.querySelectorAll('#partnerTrack .p-grievance').length > 0,
+           'every partner card links to grievance redressal');
+
+        /* nothing on the page should read as unfinished copy */
+        var pageText = doc.body.innerText || doc.body.textContent;
+        var leftovers = ['To be published', 'to be provided', '[name]',
+                         'registered entity name', 'Lorem ipsum', 'TODO']
+          .filter(function (t) { return pageText.indexOf(t) > -1; });
+        ok(leftovers.length === 0,
+           'no placeholder text is visible' + (leftovers.length ? ' — found: ' + leftovers.join(', ') : ''));
         ok(doc.querySelectorAll('#partnerTrack .partner-card[aria-hidden] a[tabindex="-1"]').length > 0,
            'clones are taken out of the tab order');
         ok(doc.querySelectorAll('#dlaGrid .dla-card').length === 2,

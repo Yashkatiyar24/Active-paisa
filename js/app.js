@@ -787,21 +787,18 @@
     li.appendChild(el('h3', 'p-name', p.legal));
     li.appendChild(el('span', 'p-tag', 'Personal Loan'));
 
-    var block = el('div', 'p-block' + (p.pending ? ' is-pending' : ''));
-    block.appendChild(el('div', 'p-role', tag));
-    block.appendChild(el('strong', null, p.officer));
-    block.appendChild(el('div', null, p.email));
-    block.appendChild(el('div', null, p.phone));
-    li.appendChild(block);
-
-    // two links keeps them on one line; grievance redressal has its own bar below
     var links = el('div', 'p-links');
-    ['Privacy Policy', 'T&C'].forEach(function (label) {
-      var a = el('a', null, label);
-      a.href = '#grievance';
+    [['Privacy Policy', '#privacy'], ['T&C', '#terms']].forEach(function (pair) {
+      var a = el('a', null, pair[0]);
+      a.href = pair[1];
       links.appendChild(a);
     });
     li.appendChild(links);
+
+    // its own row, so it never wraps behind a stray separator
+    var g = el('a', 'p-grievance', tag);
+    g.href = '#grievance';
+    li.appendChild(g);
 
     return li;
   }

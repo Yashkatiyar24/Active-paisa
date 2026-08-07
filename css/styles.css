@@ -347,9 +347,7 @@ ul, ol { list-style: none; padding: 0; }
   color: var(--ink-3); font-weight: 700; font-size: 1.15rem; letter-spacing: .02em;
 }
 
-/* contact details awaiting the partnership agreement */
-.p-block.is-pending strong,
-.p-block.is-pending div:not(.p-role) { color: var(--ink-3); font-style: italic; font-weight: 400; }
+
 
 .avatar {
   width: 44px; height: 44px; flex-shrink: 0;
@@ -357,15 +355,16 @@ ul, ol { list-style: none; padding: 0; }
   display: grid; place-items: center;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.p-name { font-size: .98rem; margin-bottom: 16px; min-height: 2.4em; display: flex; align-items: center; }
+.p-name { font-size: .98rem; margin-bottom: 14px; min-height: 2.6em; display: flex; align-items: center; }
 .p-tag {
   display: inline-block; font-size: .76rem; font-weight: 500;
   color: var(--secondary); background: var(--tint);
   padding: 5px 14px; border-radius: 6px; margin-bottom: 18px;
 }
-.p-block { font-size: .84rem; color: var(--ink-2); line-height: 1.9; }
-.p-block .p-role { color: var(--ink-3); }
-.p-block strong { color: var(--ink); font-weight: 600; display: block; }
+.p-grievance {
+  display: inline-block; margin-top: 10px;
+  font-size: .84rem; text-decoration: underline; text-underline-offset: 3px;
+}
 .p-links {
   display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
   gap: 4px 0; margin-top: 16px;
@@ -833,9 +832,6 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
 
 .officer { margin-top: 20px; line-height: 1.8; }
 .officer h4 { font-size: .88rem; font-weight: 700; color: var(--ink); }
-
-/* placeholders for details the business still has to supply */
-.tbd { color: var(--ink-3); font-style: italic; }
 
 .footer-col h3 { font-size: 1.05rem; color: var(--ink); margin-bottom: 16px; }
 .footer-col li { margin-bottom: 11px; padding-left: 16px; position: relative; }

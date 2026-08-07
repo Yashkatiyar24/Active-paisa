@@ -68,21 +68,13 @@ var AP = (function () {
   ];
 
   /* ---------- Lending partners ----------
-     Lender names confirmed by the business as existing partners.
+     Partner contact details are not published on the card. Each lender's own
+     grievance route is reachable through its Grievance Redressal link, so
+     nothing here has to stand in for details we do not hold.
 
-     Grievance contacts are intentionally left as placeholders: each lender
-     names its own officer in the partnership agreement, and a borrower has to
-     be able to actually reach that person. Inventing one would put a name that
-     does not exist against a regulated institution.
-
-     `logo` is optional — drop the lender's own file into
-     assets/brand/partners/ and set the path, otherwise a neutral initials
-     tile stands in. We do not draw approximations of a lender's mark. */
-  var TBD = { officer: 'To be published', email: 'To be published', phone: 'To be published' };
-
+     `logo` is optional — without one a neutral initials tile is used. */
   function lender(initials, name, legal, extra) {
-    var row = { initials: initials, name: name, legal: legal,
-                officer: TBD.officer, email: TBD.email, phone: TBD.phone, pending: true };
+    var row = { initials: initials, name: name, legal: legal };
     if (extra) for (var k in extra) row[k] = extra[k];
     return row;
   }
