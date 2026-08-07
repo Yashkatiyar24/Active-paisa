@@ -92,54 +92,22 @@
            'grievance links bar sits below the partner carousel');
 
 
-        /* ---- product sections shared with the other loan pages ---- */
-        ok(d.querySelectorAll('#compareGrid .cmp-card').length === 3, 'renders 3 comparison cards');
-        ok(d.querySelectorAll('#compareGrid .cmp-card.is-featured').length === 1,
-           'exactly one comparison card is flagged as most chosen');
-        ok(d.querySelectorAll('#docList .doc-row').length === 4, 'renders the 4-document checklist');
-        ok(d.querySelectorAll('.faq-item').length === 6, 'renders 6 FAQ entries');
-        ok(d.querySelector('script[type="application/ld+json"]') !== null,
-           'page carries FAQ structured data for search engines');
+        /* ---- the main page keeps only the hero, partners, reviews, app
+               and support; calculators and FAQ live on the product pages ---- */
+        ok(d.querySelectorAll('.odometer .odo-col').length === 2,
+           'builds a 2-digit odometer for the hero amount');
         ok(d.querySelector('#stickyCta') !== null, 'sticky apply bar is present');
         var navHrefs = [].map.call(d.querySelectorAll('#headerNav a, .footer-col a'),
           function (a) { return a.getAttribute('href'); });
         ok(navHrefs.indexOf('business-loan.html') > -1 && navHrefs.indexOf('home-loan.html') > -1,
            'navigation reaches the business and home loan pages');
-        ok(d.querySelectorAll('.odometer .odo-col').length === 2,
-           'builds a 2-digit odometer for the hero amount');
 
-        /* ---- EMI calculator ---- */
-        var emiOut = d.querySelector('#calcEmi');
-        var firstEmi = money(emiOut.textContent);
-        // 8,00,000 at 12.5% over 36 months is about 26,760
-        ok(Math.abs(firstEmi - 26760) < 60, 'EMI matches the amortisation formula (' + firstEmi + ')');
-
-        var tenure = d.querySelector('#calcTenure');
-        tenure.value = 60; fire(tenure, 'input');
-        await wait(40);
-        ok(money(emiOut.textContent) < firstEmi, 'a longer tenure lowers the instalment');
-
-        /* ---- eligibility calculator ---- */
-        var eligAmount = d.querySelector('#eligAmount');
-        ok(eligAmount.textContent === '—', 'eligibility starts empty');
-        set(d, '#eligIncome', '80000');
-        await wait(40);
-        var elig1 = money(eligAmount.textContent);
-        ok(elig1 > 0, 'eligibility computes from income (' + elig1 + ')');
-        set(d, '#eligObligations', '20000');
-        await wait(40);
-        ok(money(eligAmount.textContent) < elig1, 'existing EMIs reduce the eligible amount');
-
-        /* ---- FAQ accordion ---- */
-        var faq0 = d.querySelectorAll('.faq-item')[0];
-        var faq1 = d.querySelectorAll('.faq-item')[1];
-        faq0.querySelector('[data-acc-trigger]').click();
-        await wait(30);
-        ok(faq0.classList.contains('is-open'), 'clicking a question opens it');
-        faq1.querySelector('[data-acc-trigger]').click();
-        await wait(30);
-        ok(faq1.classList.contains('is-open') && !faq0.classList.contains('is-open'),
-           'opening another question closes the previous one');
+        ['#emiCalc', '#eligCalc', '#compareGrid', '#docList', '.faq-item', '.benefit-card']
+          .forEach(function (sel) {
+            ok(d.querySelector(sel) === null, 'main page carries no ' + sel);
+          });
+        ok(d.querySelector('script[type="application/ld+json"]') === null,
+           'no FAQ schema is claimed without the questions on the page');
 
         /* ---- carousels ----
            Headless produces no animation frames, so a smooth scroll never
@@ -170,9 +138,6 @@
            'store badge stacks its platform label above the status');
         ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
         ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
-        ok(styled('.cmp-card', 'borderTopWidth', '0px'), 'comparison cards are styled');
-        // .calc-out uses a gradient, which lands on backgroundImage not backgroundColor
-        ok(styled('.calc-out', 'backgroundImage', 'none'), 'calculator panel is styled');
         ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
 
         /* ---- images ---- */
