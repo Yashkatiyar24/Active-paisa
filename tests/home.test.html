@@ -59,15 +59,16 @@
            'grievance links bar sits below the partner carousel');
 
 
-        /* ---- product chooser ---- */
-        var cards = d.querySelectorAll('.prod-card');
-        ok(cards.length === 3, 'home page offers all three products');
-        var hrefs = [].map.call(d.querySelectorAll('.prod-card a'), function (a) {
-          return a.getAttribute('href'); });
-        ok(hrefs.indexOf('personal-loan.html') > -1 &&
-           hrefs.indexOf('business-loan.html') > -1 &&
-           hrefs.indexOf('home-loan.html') > -1,
-           'each product card links to its own page');
+        /* ---- product discovery ----
+           With the chooser section gone, the nav is the only route to the three
+           product pages, so guard that it actually reaches all of them. */
+        var navHrefs = [].map.call(d.querySelectorAll('#headerNav a, .footer-col a'),
+          function (a) { return a.getAttribute('href'); });
+        ok(navHrefs.indexOf('personal-loan.html') > -1 &&
+           navHrefs.indexOf('business-loan.html') > -1 &&
+           navHrefs.indexOf('home-loan.html') > -1,
+           'navigation reaches all three product pages');
+        ok(d.querySelector('.prod-card') === null, 'the product chooser section is gone');
 
         /* ---- the home page owns none of the product machinery ---- */
         ok(d.querySelector('#emiCalc') === null, 'home page carries no EMI calculator');
@@ -105,7 +106,6 @@
            'store badge stacks its platform label above the status');
         ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
         ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
-        ok(styled('.prod-card', 'borderTopWidth', '0px'), 'product cards are styled');
         ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
 
         /* ---- images ---- */

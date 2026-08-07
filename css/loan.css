@@ -94,33 +94,6 @@
 .lp-steps span { font-size: .84rem; color: var(--ink-2); }
 
 /* ==========================================================================
-   Home page — product chooser
-   ========================================================================== */
-.prod-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.prod-card {
-  display: flex; flex-direction: column;
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 30px 26px;
-  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
-              border-color var(--dur) var(--ease);
-}
-.prod-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--sh-lg);
-  border-color: rgba(30, 107, 255, .35);
-}
-.prod-card h3 { font-size: 1.22rem; margin-bottom: 8px; }
-.prod-blurb { font-size: .9rem; color: var(--ink-2); margin-bottom: 22px; }
-.prod-facts {
-  display: grid; gap: 11px; margin-bottom: 26px;
-  padding-top: 18px; border-top: 1px solid var(--line);
-  flex: 1;
-}
-.prod-facts > div { display: flex; justify-content: space-between; gap: 14px; }
-.prod-facts dt { font-size: .85rem; color: var(--ink-2); }
-.prod-facts dd { font-size: .9rem; font-weight: 700; }
-
-/* ==========================================================================
    Benefit cards
    ========================================================================== */
 .benefit-grid {
@@ -479,7 +452,7 @@ body.is-applying .sticky-cta { display: none; }
 @media (max-width: 1024px) {
   .lp-hero-grid { grid-template-columns: 1fr; gap: 36px; }
   .lp-hero-card { max-width: 520px; }
-  .benefit-grid, .cmp-grid, .prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .benefit-grid, .cmp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .calc-grid, .elig-grid { grid-template-columns: 1fr; }
 }
 
@@ -489,7 +462,7 @@ body.is-applying .sticky-cta { display: none; }
 
 @media (max-width: 720px) {
   .lp-hero { padding: 44px 0 60px; }
-  .benefit-grid, .cmp-grid, .prod-grid { grid-template-columns: 1fr; }
+  .benefit-grid, .cmp-grid { grid-template-columns: 1fr; }
   .lp-facts { grid-template-columns: 1fr 1fr; }
   .calc-panel, .calc-out, .elig-result { padding: 22px; }
   .sticky-inner { padding: 12px 16px; }
