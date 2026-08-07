@@ -128,6 +128,25 @@
            doc.querySelector('#app').textContent.indexOf('Coming soon') > -1,
            'app section shows both stores as coming soon');
 
+        /* Computed-style guards. A deleted CSS block still passes every
+           markup-only assertion, so check the key components are actually
+           styled, not merely present. */
+        var w = frame.contentWindow;
+        function styled(sel, prop, reject) {
+          var node = doc.querySelector(sel);
+          if (!node) return false;
+          return w.getComputedStyle(node)[prop] !== reject;
+        }
+        ok(styled('.store-badge', 'borderTopWidth', '0px'), 'store badges are styled');
+        ok(w.getComputedStyle(doc.querySelector('.store-badge span')).flexDirection === 'column',
+           'store badge stacks its platform label above the status');
+        ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');
+        ok(styled('.review-card', 'borderTopWidth', '0px'), 'review cards are styled');
+        ok(styled('.capture-card', 'backgroundColor', 'rgba(0, 0, 0, 0)'),
+           'application capture card is styled');
+        ok(styled('.hl-icon', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'hero highlight icons are styled');
+        ok(styled('.footer-main', 'backgroundColor', 'rgba(0, 0, 0, 0)'), 'footer is styled');
+
         var footer = doc.querySelector('.site-footer').textContent;
         ok(doc.querySelectorAll('.footer-col').length === 2,
            'footer has the Company and Digital Lending columns');

@@ -425,6 +425,30 @@ ul, ol { list-style: none; padding: 0; }
 .review-author span { font-size: .8rem; color: var(--ink-3); }
 
 /* ==========================================================================
+   App download
+   ========================================================================== */
+.app-section { background: var(--bg); }
+.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.app-copy h2 { font-size: clamp(1.35rem, 2.8vw, 1.85rem); line-height: 1.35; }
+.app-arrow { width: 100%; max-width: 340px; height: auto; margin: 10px 0 6px; opacity: .55; }
+
+.store-list { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 18px; }
+.store-badge {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 22px 12px 18px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink);
+}
+.store-badge svg { flex-shrink: 0; color: var(--secondary); }
+.store-badge span { display: flex; flex-direction: column; font-weight: 700; line-height: 1.25; }
+.store-badge small {
+  font-size: .7rem; font-weight: 500; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+
+.app-art img { width: 100%; max-width: 420px; height: auto; margin-inline: auto; }
+
+/* ==========================================================================
    Support
    ========================================================================== */
 .support-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
