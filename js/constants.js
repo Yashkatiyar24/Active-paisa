@@ -59,11 +59,11 @@ var AP = (function () {
      applicant's declared income in app.js.
      TODO: replace with live offers from the lending partner API. */
   var OFFERS = [
-    { id: 'bp1', name: 'Bank Partner 1', tag: 'NBFC · Personal Loan', badge: 'B1',
+    { id: 'bp1', logo: 'assets/brand/partners/p1.svg', name: 'Bank Partner 1', tag: 'NBFC · Personal Loan', badge: 'B1',
       rate: 10.99, tenure: 36, multiple: 12, cap: 1500000, pill: 'Lowest EMI' },
-    { id: 'bp2', name: 'Bank Partner 2', tag: 'Bank · Personal Loan', badge: 'B2',
+    { id: 'bp2', logo: 'assets/brand/partners/p2.svg', name: 'Bank Partner 2', tag: 'Bank · Personal Loan', badge: 'B2',
       rate: 12.50, tenure: 24, multiple: 15, cap: 2000000, pill: 'Instant disbursal' },
-    { id: 'bp3', name: 'Bank Partner 3', tag: 'NBFC · Personal Loan', badge: 'B3',
+    { id: 'bp3', logo: 'assets/brand/partners/p3.svg', name: 'Bank Partner 3', tag: 'NBFC · Personal Loan', badge: 'B3',
       rate: 14.25, tenure: 48, multiple: 18, cap: 1000000, pill: 'Highest amount' }
   ];
 
@@ -72,35 +72,35 @@ var AP = (function () {
      so nothing here can route to a real person.
      TODO: replace with each lender's real regulatory disclosure before launch. */
   var PARTNERS = [
-    { badge: 'B1', name: 'Bank Partner 1', legal: 'Bank Partner 1 Finance Limited',
+    { badge: 'B1', logo: 'assets/brand/partners/p1.svg', name: 'Bank Partner 1', legal: 'Bank Partner 1 Finance Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner1.example', phone: '1800 000 001' },
-    { badge: 'B2', name: 'Bank Partner 2', legal: 'Bank Partner 2 Capital Limited',
+    { badge: 'B2', logo: 'assets/brand/partners/p2.svg', name: 'Bank Partner 2', legal: 'Bank Partner 2 Capital Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner2.example', phone: '1800 000 002' },
-    { badge: 'B3', name: 'Bank Partner 3', legal: 'Bank Partner 3 Financial Services Limited',
+    { badge: 'B3', logo: 'assets/brand/partners/p3.svg', name: 'Bank Partner 3', legal: 'Bank Partner 3 Financial Services Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner3.example', phone: '1800 000 003' },
-    { badge: 'B4', name: 'Bank Partner 4', legal: 'Bank Partner 4 Fincorp Limited',
+    { badge: 'B4', logo: 'assets/brand/partners/p4.svg', name: 'Bank Partner 4', legal: 'Bank Partner 4 Fincorp Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner4.example', phone: '1800 000 004' },
-    { badge: 'B5', name: 'Bank Partner 5', legal: 'Bank Partner 5 Services Limited',
+    { badge: 'B5', logo: 'assets/brand/partners/p5.svg', name: 'Bank Partner 5', legal: 'Bank Partner 5 Services Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner5.example', phone: '1800 000 005' },
-    { badge: 'B6', name: 'Bank Partner 6', legal: 'Bank Partner 6 Bank Limited',
+    { badge: 'B6', logo: 'assets/brand/partners/p6.svg', name: 'Bank Partner 6', legal: 'Bank Partner 6 Bank Limited',
       officer: 'Grievance Officer', email: 'grievance@bankpartner6.example', phone: '1800 000 006' }
   ];
 
   /* ---------- Digital lending partners ---------- */
   var DLA_PARTNERS = [
-    { badge: 'D1', name: 'Digital Partner 1', legal: 'Digital Partner 1 Technologies Private Limited',
+    { badge: 'D1', logo: 'assets/brand/partners/dla1.svg', name: 'Digital Partner 1', legal: 'Digital Partner 1 Technologies Private Limited',
       officer: 'Nodal Officer', email: 'nodal@digitalpartner1.example', phone: '1800 000 011' },
-    { badge: 'D2', name: 'Digital Partner 2', legal: 'Digital Partner 2 Limited',
+    { badge: 'D2', logo: 'assets/brand/partners/dla2.svg', name: 'Digital Partner 2', legal: 'Digital Partner 2 Limited',
       officer: 'Nodal Officer', email: 'nodal@digitalpartner2.example', phone: '1800 000 012' }
   ];
 
   /* TODO: replace with real, consented customer testimonials before launch. */
   var REVIEWS = [
-    { badge: 'AS', name: 'A. Sharma', city: 'Pune',
+    { badge: 'AS', avatar: 'assets/brand/avatars/a1.svg', name: 'A. Sharma', city: 'Pune',
       text: 'The entire application took under ten minutes and I never had to upload a single document. The offer I picked was disbursed the same day.' },
-    { badge: 'R M', name: 'R. Mehta', city: 'Bengaluru',
+    { badge: 'R M', avatar: 'assets/brand/avatars/a2.svg', name: 'R. Mehta', city: 'Bengaluru',
       text: 'I compared three offers side by side and chose the one with the EMI that fit my budget. No hidden charges anywhere in the process.' },
-    { badge: 'PK', name: 'P. Kulkarni', city: 'Mumbai',
+    { badge: 'PK', avatar: 'assets/brand/avatars/a3.svg', name: 'P. Kulkarni', city: 'Mumbai',
       text: 'Applied on my phone during a lunch break. The OTP verification was instant and the approval came through before I got back to my desk.' }
   ];
 

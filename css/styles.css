@@ -331,12 +331,21 @@ ul, ol { list-style: none; padding: 0; }
 }
 .car-track > .partner-card:last-child { border-right: 0; }
 
+/* logo slot — swap the SVG per lender, the tile stays put */
 .p-logo {
-  width: 58px; height: 58px; margin-bottom: 18px;
-  border-radius: 14px; background: var(--grad);
+  width: 66px; height: 66px; margin-bottom: 18px; padding: 11px;
+  border-radius: 14px; background: var(--surface);
+  border: 1px solid var(--line);
   display: grid; place-items: center;
-  color: #fff; font-weight: 700; font-size: 1.05rem;
 }
+.p-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+.avatar {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 .p-name { font-size: .98rem; margin-bottom: 16px; min-height: 2.4em; display: flex; align-items: center; }
 .p-tag {
   display: inline-block; font-size: .76rem; font-weight: 500;
@@ -420,7 +429,7 @@ ul, ol { list-style: none; padding: 0; }
 
 .review-card blockquote { font-size: .95rem; color: var(--ink-2); flex: 1; line-height: 1.75; }
 .review-author { display: flex; align-items: center; gap: 12px; }
-.review-author .p-logo { width: 42px; height: 42px; margin: 0; font-size: .85rem; border-radius: 50%; }
+.review-author .avatar { width: 44px; height: 44px; }
 .review-author strong { display: block; font-size: .95rem; color: var(--ink); }
 .review-author span { font-size: .8rem; color: var(--ink-3); }
 
@@ -748,10 +757,12 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px
 .offer-head { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .offer-head > div { flex: 1; min-width: 0; }
 .offer-badge {
-  width: 42px; height: 42px; flex-shrink: 0;
-  border-radius: 12px; background: var(--grad);
-  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .95rem;
+  width: 44px; height: 44px; flex-shrink: 0; padding: 7px;
+  border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
 }
+.offer-badge img { width: 100%; height: 100%; object-fit: contain; }
 .offer-name { font-size: .98rem; font-weight: 700; }
 .offer-tag { font-size: .76rem; color: var(--ink-3); }
 .offer-pill {

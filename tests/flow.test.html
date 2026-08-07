@@ -138,6 +138,19 @@
           return w.getComputedStyle(node)[prop] !== reject;
         }
         ok(styled('.store-badge', 'borderTopWidth', '0px'), 'store badges are styled');
+
+        /* artwork actually resolves — a broken src leaves naturalWidth at 0 */
+        var art = [].slice.call(doc.querySelectorAll(
+          '.p-logo img, .avatar img, .hero-art img, .app-art img, .brand-logo, .footer-logo'));
+        ok(art.length >= 12, 'logo, avatar and illustration images are all rendered (' + art.length + ')');
+        var broken = art.filter(function (n) { return n.complete && n.naturalWidth === 0; });
+        ok(broken.length === 0,
+           'every image resolves' + (broken.length ? ' — broken: ' + broken.map(function (n) {
+             return n.getAttribute('src'); }).join(', ') : ''));
+        ok(art.every(function (n) { return n.hasAttribute('alt'); }),
+           'every image carries an alt attribute');
+        ok(doc.querySelectorAll('.p-logo img[loading="lazy"]').length > 0,
+           'partner logos are lazy-loaded');
         ok(w.getComputedStyle(doc.querySelector('.store-badge span')).flexDirection === 'column',
            'store badge stacks its platform label above the status');
         ok(styled('.partner-card', 'borderRightWidth', '0px'), 'partner columns keep their divider');

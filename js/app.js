@@ -19,6 +19,15 @@
     return node;
   }
 
+  function img(src, alt, size) {
+    var node = document.createElement('img');
+    node.src = src;
+    node.alt = alt || '';
+    node.width = size; node.height = size;
+    node.loading = 'lazy'; node.decoding = 'async';
+    return node;
+  }
+
   var inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
   function money(n) { return '₹' + inr.format(Math.round(n)); }
   function digitsOnly(s) { return String(s).replace(/\D/g, ''); }
@@ -533,7 +542,9 @@
     var card = el('article', 'offer');
 
     var head = el('div', 'offer-head');
-    head.appendChild(el('span', 'offer-badge', offer.badge));
+    var mark = el('span', 'offer-badge');
+    mark.appendChild(img(offer.logo, '', 30));
+    head.appendChild(mark);
     var titles = el('div');
     titles.appendChild(el('div', 'offer-name', offer.name));
     titles.appendChild(el('div', 'offer-tag', offer.tag));
@@ -767,7 +778,9 @@
      ========================================================================== */
   function partnerCard(p, tag) {
     var li = el('li', 'partner-card');
-    li.appendChild(el('div', 'p-logo', p.badge));
+    var tile = el('div', 'p-logo');
+    tile.appendChild(img(p.logo, p.name + ' logo', 44));
+    li.appendChild(tile);
     li.appendChild(el('h3', 'p-name', p.legal));
     li.appendChild(el('span', 'p-tag', 'Personal Loan'));
 
@@ -811,7 +824,9 @@
       li.appendChild(el('span', 'quote-rule'));
       li.appendChild(el('blockquote', null, r.text));
       var author = el('div', 'review-author');
-      author.appendChild(el('span', 'p-logo', r.badge));
+      var face = el('span', 'avatar');
+      face.appendChild(img(r.avatar, '', 44));
+      author.appendChild(face);
       var meta = el('div');
       meta.appendChild(el('strong', null, r.name));
       meta.appendChild(el('span', null, r.city));
