@@ -20,6 +20,12 @@
   [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
 
+.section-sub {
+  font-size: var(--text-lead); color: var(--ink-2);
+  text-align: center; max-width: 46rem; margin: -22px auto var(--sp-10);
+}
+.section-sub:empty { display: none; }
+
 /* ==========================================================================
    Product hero
    ========================================================================== */
@@ -66,8 +72,9 @@
 .lp-facts dt { font-size: .76rem; color: var(--ink-2); margin-bottom: 3px; }
 .lp-facts dd { font-size: 1rem; font-weight: 700; }
 
-.lp-cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
-.lp-trust { font-size: .84rem; color: var(--ink-3); }
+.lp-cta-row { display: flex; flex-wrap: wrap; gap: var(--sp-4); align-items: center; }
+.lp-cta-row .btn-ghost { min-height: 64px; }
+.lp-trust { font-size: var(--text-caption); color: var(--ink-3); }
 
 /* glass panel on the right of the hero */
 .lp-hero-card {
@@ -108,7 +115,7 @@
 .benefit-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--sh-lg);
-  border-color: rgba(30, 107, 255, .35);
+  border-color: rgba(12, 110, 110, .35);
 }
 .benefit-card .ico {
   display: grid; place-items: center;
@@ -157,13 +164,13 @@ input[type="range"]::-webkit-slider-thumb {
   width: 22px; height: 22px; margin-top: -8px;
   border-radius: 50%; background: #fff;
   border: 2px solid var(--primary);
-  box-shadow: 0 2px 8px rgba(30, 107, 255, .35);
+  box-shadow: 0 2px 8px rgba(12, 110, 110, .35);
   transition: transform var(--dur) var(--ease);
 }
 input[type="range"]::-moz-range-thumb {
   width: 20px; height: 20px; border-radius: 50%;
   background: #fff; border: 2px solid var(--primary);
-  box-shadow: 0 2px 8px rgba(30, 107, 255, .35);
+  box-shadow: 0 2px 8px rgba(12, 110, 110, .35);
 }
 input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.12); }
 input[type="range"]:focus-visible { outline: 3px solid var(--primary); outline-offset: 6px; }
@@ -190,15 +197,17 @@ input[type="range"]:focus-visible { outline: 3px solid var(--primary); outline-o
 .calc-rows dd { font-size: 1rem; font-weight: 700; }
 .calc-foot { margin-top: 22px; font-size: .76rem; color: #64748B; line-height: 1.6; }
 
-/* eligibility */
-.elig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: start; }
+/* eligibility
+   Fields stack vertically inside the panel; spacing lives here, not inline. */
+.elig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-7); align-items: start; }
+.calc-panel .field.outlined + .field.outlined { margin-top: var(--sp-6); }
 .elig-result {
   border-radius: var(--r-lg); padding: 28px;
   background: var(--bg); border: 1px dashed var(--line);
   text-align: center;
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.elig-result.is-ready { background: var(--tint); border-style: solid; border-color: rgba(30,107,255,.28); }
+.elig-result.is-ready { background: var(--tint); border-style: solid; border-color: rgba(12,110,110,.28); }
 .elig-result .cap { font-size: .84rem; color: var(--ink-2); }
 .elig-amount {
   font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800;
@@ -219,7 +228,7 @@ input[type="range"]:focus-visible { outline: 3px solid var(--primary); outline-o
 .cmp-card:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
 .cmp-card.is-featured {
   border-color: var(--primary);
-  box-shadow: 0 18px 40px rgba(30, 107, 255, .16);
+  box-shadow: 0 18px 40px rgba(12, 110, 110, .16);
 }
 .cmp-flag {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -352,7 +361,7 @@ body.is-applying .sticky-cta { display: none; }
   margin: 4px 0 22px; padding: 15px 26px 15px 20px;
   border-radius: 999px;
   background: var(--tint);
-  border: 1px solid rgba(30, 107, 255, .22);
+  border: 1px solid rgba(12, 110, 110, .22);
 }
 .done-callout .ring {
   flex-shrink: 0; display: grid; place-items: center;
@@ -426,8 +435,8 @@ body.is-applying .sticky-cta { display: none; }
   text-decoration: underline; text-underline-offset: 2px;
 }
 .drop.has-error .drop-zone { border-color: var(--danger); background: var(--danger-bg); }
-.drop .error { margin-top: 7px; }
-.drop.has-error .error { display: block; }
+.drop .error { margin-top: var(--sp-2); }
+.drop.has-error .error { opacity: 1; visibility: visible; }
 
 /* ==========================================================================
    Review

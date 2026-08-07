@@ -122,7 +122,7 @@ var APLoan = (function () {
 
     p.compare.forEach(function (opt, i) {
       var s = C.schedule(principal, opt.rate, opt.tenure);
-      var card = el('li', 'cmp-card' + (opt.featured ? ' is-featured' : ''));
+      var card = el('li', 'card cmp-card' + (opt.featured ? ' is-featured' : ''));
       card.setAttribute('data-reveal', '');
       card.dataset.revealDelay = String(i * 80);
 

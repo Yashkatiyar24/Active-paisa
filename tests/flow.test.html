@@ -208,6 +208,12 @@
         ok(d.querySelector('[name="email"]').closest('.field').classList.contains('has-error'),
            'rejects a malformed email');
 
+        var pincodeTop = Math.round(d.querySelector('[name="pincode"]').getBoundingClientRect().top);
+        set(d, '[name="email"]', 'anita@example.com');
+        await wait(60);
+        ok(Math.round(d.querySelector('[name="pincode"]').getBoundingClientRect().top) === pincodeTop,
+           'clearing an error does not shift the fields below it');
+
         set(d, '[name="pincode"]', '012345');
         await wait(60);
         ok(d.querySelector('[name="pincode"]').closest('.field').classList.contains('has-error'),

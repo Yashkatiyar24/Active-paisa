@@ -57,7 +57,7 @@
     var host = $('#reviewTrack');
     if (!host) return;
     AP.REVIEWS.forEach(function (r) {
-      var li = el('li', 'review-card');
+      var li = el('li', 'card review-card');
       li.appendChild(el('span', 'quote-rule'));
       li.appendChild(el('blockquote', null, r.text));
 

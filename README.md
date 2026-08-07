@@ -59,13 +59,30 @@ uses a CSS-transform odometer. No carousel or animation library.
 
 | Token | Value |
 |---|---|
-| Primary | `#1E6BFF` |
-| Secondary | `#472A8F` |
+| Primary (`--primary`) | `#0C6E6E` — deep-ocean teal |
+| Secondary (`--secondary`) | `#0D3B45` — abyss navy-teal |
+| Tint (`--tint`) | `#E3F3F3` — pale sea |
 | Background | `#F8FAFC` |
 | Buttons | `linear-gradient(135deg, secondary, primary)` |
 
 All tokens are CSS custom properties at the top of `css/styles.css`. Change them
 there and the whole site follows.
+
+The same file also defines the full scales the UI runs off, so nothing uses a
+one-off value:
+
+| Scale | Tokens |
+|---|---|
+| Type (`--text-*`) | caption → small → body → lead → h4 → h3 → h2 → h1 → display |
+| Spacing (`--sp-*`) | 8px grid from `--sp-1: 4px` to `--sp-20: 80px` |
+| Elevation (`--sh-*`) | sm / md / lg / xl / cta |
+| Shape (`--r-*`) | sm / md / lg / xl |
+| Motion (`--ease`, `--dur`) | ease + duration, shared by every transition |
+| Controls (`--field-h`, `--btn-h`) | one vertical rhythm for inputs, selects and buttons |
+
+Form fields reserve their message slot, so a validation error appearing never
+moves the fields around it, and text inputs, dates and selects all share one
+height.
 
 ## Demo build
 
