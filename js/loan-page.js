@@ -822,9 +822,92 @@ var APLoan = (function () {
     function finish() {
       $('#flowDoneSub').textContent =
         'We have your ' + p.name.toLowerCase() + ' request. There is nothing more to do right now.';
-      stampReference();
-      goTo(panels.length - 1);
-      C.toast('Application submitted.', 'success');
+      submitToBackOffice().then(function (res) {
+        if (res && res.reference_number) $('#flowRef').textContent = res.reference_number;
+        goTo(panels.length - 1);
+        C.toast('Application submitted.', 'success');
+      }).catch(function () {
+        stampReference();
+        goTo(panels.length - 1);
+        C.toast('Application saved. We will be in touch shortly.', 'success');
+      });
+    }
+
+    /* Every completed website application is persisted to PostgreSQL through
+       the Activ Paisa API, so it appears in the admin portal instantly. */
+    function submitToBackOffice() {
+      var d = state.data || {};
+      var money = function (v) {
+        if (v === undefined || v === null || v === '') return '';
+        var n = parseFloat(String(v).replace(/[^0-9.-]/g, ''));
+        return isNaN(n) ? '' : String(n);
+      };
+      var consentBox = function (name) {
+        var el2 = document.getElementById('f_' + name);
+        return !!(el2 && el2.checked);
+      };
+      var payload = {
+        loanType: p.id,
+        loanLabel: p.name,
+        amount: Number(d.amount) || Number(d.turnover) || 0,
+        tenureMonths: Number(d.tenure) || 0,
+        consentTerms: consentBox('declResident') || consentBox('flowConsent'),
+        consentPrivacy: consentBox('declResident'),
+        consentDeclaration: consentBox('declIndustry'),
+        source: 'website',
+        docs: Object.keys(state.files || {}).map(function (key) {
+          var f = state.files[key];
+          return { name: f.name, size: (f.size / 1024).toFixed(0) + ' KB', label: key, hint: '' };
+        }),
+        customer: {
+          name: d.fullName || d.businessName || d.name || '',
+          mobile: d.mobile || '',
+          email: d.email || '',
+          pan: d.pan || '',
+          dob: d.dob || '',
+          city: d.city || '',
+          pincode: d.pincode || '',
+          gender: d.gender || '',
+          employment: d.employment || '',
+          company: d.company || '',
+          income: money(d.income),
+          household: money(d.household),
+          entityType: d.entityType || '',
+          vintage: d.vintage || '',
+          gstin: d.gstin || '',
+          address: d.addressLine || ''
+        }
+      };
+      return fetch('/api/v1/public/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) {
+        if (!r.ok) throw new Error('Submission failed');
+        return r.json();
+      }).catch(function (e) {
+        /* Never block a customer who already finished the flow. Keep the
+           local copy as a fallback so nothing is silently lost. */
+        if (typeof APStore !== 'undefined') APStore.insertApplication(appFromLocal(payload));
+        throw e;
+      });
+    }
+
+    function appFromLocal(payload) {
+      var c = payload.customer || {};
+      return {
+        id: 'APW-' + Date.now(),
+        ref: $('#flowRef').textContent,
+        created: Date.now(),
+        loanId: payload.loanType,
+        loanLabel: payload.loanLabel,
+        amount: payload.amount,
+        tenureMonths: payload.tenureMonths,
+        status: 'new', executive: '', source: 'Website',
+        customer: c,
+        timeline: [{ at: Date.now(), text: 'Application submitted via activpaisa.com.', by: 'Website' }],
+        notes: [], docs: payload.docs
+      };
     }
 
     /* Short, human-readable handle for the applicant to quote on the phone. */

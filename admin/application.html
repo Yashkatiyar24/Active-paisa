@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Application · Activ Paisa Admin</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="icon" href="../assets/brand/logo.svg" type="image/svg+xml">
+  <style>#root{min-height:100vh}</style>
+</head>
+<body class="admin " data-page="application">
+  <div id="root"></div>
+  <div id="a-toasts" class="toasts" role="status" aria-live="polite"></div>
+  <script src="../js/core.js"></script>
+  <script src="../js/constants.js"></script>
+  <script src="../js/admin/store.js"></script>
+  <script src="../js/admin/ui.js"></script>
+  <script src="../js/admin/app.js"></script>
+  <script src="../js/admin/pages-shared.js"></script>
+  <script src="../js/admin/pages-login.js"></script>
+  <script src="../js/admin/pages-dashboard.js"></script>
+  <script src="../js/admin/pages-applications.js"></script>
+  <script src="../js/admin/pages-application.js"></script>
+  <script src="../js/admin/pages-misc.js"></script>
+  <script>
+    (function () {
+      var page = document.body.getAttribute('data-page');
+      if (page === 'login') {
+        APAdmin.boot();
+      } else {
+        APAdmin.boot();
+      }
+    })();
+  </script>
+</body>
+</html>

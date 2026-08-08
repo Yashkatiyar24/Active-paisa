@@ -50,6 +50,7 @@
       <a href="index.html">Personal Loan</a>
       <a href="business-loan.html">Business Loan</a>
       <a href="home-loan.html">Home Loan</a>
+      <a href="admin/login.html">Staff Login</a>
     </nav>
     <button class="btn btn-primary btn-sm header-cta" data-open-apply>Apply Now</button>
   </div>
@@ -414,7 +415,7 @@
       </button>
     </div>
   </header>
-  <h1 class="sr-only" id="applyTitle">Home Loan application</h1>
+  <h2 class="sr-only" id="applyTitle">Home Loan application</h2>
   <div class="apply-body container" id="applyCard">
     <div class="flow-progress" id="flowProgress">
       <div class="flow-track" id="flowBar" role="progressbar" aria-valuemin="1" aria-valuemax="6"
@@ -429,7 +430,9 @@
 <div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <script src="js/core.js"></script>
-<script src="js/products.js"></script>
+  <script src="js/constants.js"></script>
+  <script src="js/admin/store.js"></script>
+  <script src="js/products.js"></script>
 <script src="js/loan-page.js"></script>
 <script>APLoan.init(APProducts.byId('home'));</script>
 </body>

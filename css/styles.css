@@ -176,7 +176,7 @@ ul, ol { list-style: none; padding: 0; }
 /* Oversized hero CTA with a slow shine sweep */
 .btn-hero {
   position: relative; overflow: hidden;
-  min-height: 64px; padding: var(--sp-6) var(--sp-16); font-size: var(--text-lead);
+  min-height: 64px; padding: var(--sp-5) var(--sp-16); font-size: var(--text-lead);
   border-radius: var(--r-lg);
 }
 .btn-hero::after {
