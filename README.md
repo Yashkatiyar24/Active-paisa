@@ -97,10 +97,22 @@ declared income. Every place needing a real backend is marked `TODO:` in
 
 ## Deploying
 
-Serve the repository root as a static site. Before deploying, **delete the
-`www.moneycontrolpay.com/`, `images.moneycontrol.com/` and
-`www.googletagmanager.com/` directories** — they are the original captured page
-and are not used by this site. See the TODO note in the handover.
+The repo is a hybrid: the **public site ships as static files**, while the
+**admin portal needs the FastAPI API + Postgres**. Deploy both:
+
+1. **Render (backend + database)** — commit `render.yaml`, then create a Render
+   Blueprint from it (`backend/` web service + a managed Postgres). This runs
+   the API, seeds the superadmin, and serves everything on
+   `https://active-paisa-api.onrender.com`.
+2. **Vercel (frontend)** — import the repo as a static site. The included
+   `vercel.json` rewrites `/api/*` to the Render service, so the admin portal
+   at `/admin/login.html` works end to end.
+
+Admin login after deploy defaults to the superadmin auto-created on boot
+(`backend/app/main.py`): `MohammadAnwar@activpaisa.com` / `MohammadAnwar@123`
+— change the password immediately in Settings. Override DB and JWT secrets via
+`ACTIVPAISA_DATABASE_URL` and `ACTIVPAISA_JWT_SECRET` env vars (see
+`backend/app/config.py`).
 
 Optional minification (nothing here requires it — gzip already does the work):
 

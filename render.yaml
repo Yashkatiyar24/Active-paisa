@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: active-paisa-api
+    runtime: python
+    plan: free
+    healthCheckPath: /api/v1/health
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.6
+      - key: ACTIVPAISA_DATABASE_URL
+        fromDatabase:
+          name: active-paisa-db
+          property: connectionString
+      - key: ACTIVPAISA_JWT_SECRET
+        generateValue: true
+databases:
+  - name: active-paisa-db
+    plan: free
