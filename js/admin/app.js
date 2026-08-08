@@ -210,10 +210,6 @@ var APAdmin = (function () {
     logo.alt = 'Activ Paisa';
     logo.className = 'a-brand-logo';
     brand.appendChild(logo);
-    var brandText = UI.h('div', null, '');
-    brandText.appendChild(UI.h('strong', null, 'Activ Paisa'));
-    brandText.appendChild(UI.h('span', 'a-side-brand-sub', 'Admin portal'));
-    brand.appendChild(brandText);
     aside.appendChild(brand);
 
     if (me) {
