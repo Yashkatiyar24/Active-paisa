@@ -329,6 +329,22 @@ var APUI = (function () {
     return wrap;
   }
 
+  /* Vertical pipeline for application detail status card */
+  function statusPipeline(status, steps) {
+    steps = steps || APStore.STATUS_FLOW.slice(0, 6);
+    var idx = steps.findIndex(function (s) { return s.id === status; });
+    if (idx < 0 && APStore.STATUS_MAP[status]) idx = steps.length;
+    var wrap = h('ol', 'a-status-pipeline');
+    steps.forEach(function (s, i) {
+      var li = h('li');
+      if (idx >= 0 && i < idx) li.className = 'is-done';
+      else if (i === idx) li.className = 'is-current';
+      li.appendChild(h('span', null, s.label));
+      wrap.appendChild(li);
+    });
+    return wrap;
+  }
+
   /* ------------------------------------------------------------------ pager */
   function pager(total, page, perPage, onChange) {
     var pages = Math.max(1, Math.ceil(total / perPage));
@@ -393,6 +409,6 @@ var APUI = (function () {
     dropdown: dropdown, menuItem: menuItem, modal: modal, confirmDialog: confirmDialog,
     toast: toast,
     toCSV: toCSV, download: download,
-    stepper: stepper, pager: pager, kpi: kpi, section: section, cardBody: cardBody
+    stepper: stepper, statusPipeline: statusPipeline, pager: pager, kpi: kpi, section: section, cardBody: cardBody
   };
 })();
