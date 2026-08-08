@@ -496,10 +496,10 @@
 .a-gs-row span { color: var(--ink-3); font-size: .74rem; }
 .a-gs-empty { padding: 12px; color: var(--ink-3); font-size: .82rem; text-align: center; }
 
-.a-stepper { display: flex; gap: 6px; margin: 6px 0 14px; padding: 0; }
+.a-stepper { display: flex; gap: 6px; margin: 6px 0 14px; padding: 0; flex-wrap: wrap; }
 .a-stepper li {
-  flex: 1; position: relative;
-  display: flex; align-items: center; gap: 6px;
+  flex: 1 1 calc(20% - 6px); position: relative; min-width: 80px;
+  display: flex; align-items: center; gap: 6px; justify-content: center;
   font-size: .7rem; color: var(--ink-3); font-weight: 500;
 }
 .a-stepper li svg { display: none; }

@@ -454,10 +454,11 @@ function backLink() {
     if (!Store.can('edit_status')) {
       body.appendChild(UI.h('p', 'a-muted', 'You have view-only access to status updates.'));
     } else {
+      var row = UI.h('div', 'a-status-actions');
       var sel = UI.h('select');
       sel.appendChild(X.opt('', 'Mark as\u2026'));
       Store.nextStatuses(app.status).forEach(function (s) { sel.appendChild(X.opt(s.id, s.label)); });
-      body.appendChild(sel);
+      row.appendChild(sel);
       var save = UI.h('button', 'btn btn-primary btn-sm', 'Update status');
       save.type = 'button';
       save.addEventListener('click', function () {
@@ -466,7 +467,8 @@ function backLink() {
         UI.toast('Moved to ' + Store.STATUS_MAP[sel.value].label + '.', 'success');
         paint();
       });
-      body.appendChild(save);
+      row.appendChild(save);
+      body.appendChild(row);
     }
     return card;
   }
