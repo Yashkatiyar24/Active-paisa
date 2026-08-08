@@ -13,8 +13,11 @@ APAdmin.register('login', (function () {
 
     var left = UI.h('div', 'a-login-art');
     var brand = UI.h('div', 'a-login-brand');
-    brand.appendChild(UI.h('span', 'a-brand-mark', 'AP'));
-    brand.appendChild(UI.h('strong', null, 'Activ Paisa'));
+    var logo = document.createElement('img');
+    logo.src = '../assets/brand/logo.png';
+    logo.alt = 'Activ Paisa';
+    logo.className = 'a-brand-logo';
+    brand.appendChild(logo);
     left.appendChild(brand);
     left.appendChild(UI.h('h2', null, 'One place for every loan application.'));
     left.appendChild(UI.h('p', 'a-login-copy',

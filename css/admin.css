@@ -355,6 +355,7 @@
   color: #EAF6F6; padding: 44px; display: flex; flex-direction: column; justify-content: center;
 }
 .a-login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+.a-brand-logo { height: 48px; width: auto; }
 .a-login-art h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); color: #fff; line-height: 1.25; max-width: 14ch; letter-spacing: -.02em; }
 .a-login-copy { margin: 16px 0 30px; color: #BFDDE0; font-size: .98rem; max-width: 42ch; }
 .a-login-bullets { display: grid; gap: 14px; }
