@@ -131,10 +131,15 @@ var APAdmin = (function () {
     var aside = UI.h('aside', 'a-sidebar');
 
     var brand = UI.h('div', 'a-side-brand');
-    brand.appendChild(UI.h('span', 'a-brand-mark', 'AP'));
-    brand.appendChild(UI.h('div', null, ''));
-    brand.lastChild.appendChild(UI.h('strong', null, 'Activ Paisa'));
-    brand.lastChild.appendChild(UI.h('span', 'a-side-brand-sub', 'Admin portal'));
+    var logo = document.createElement('img');
+    logo.src = '../assets/brand/logo.png';
+    logo.alt = 'Activ Paisa';
+    logo.className = 'a-brand-logo';
+    brand.appendChild(logo);
+    var brandText = UI.h('div', null, '');
+    brandText.appendChild(UI.h('strong', null, 'Activ Paisa'));
+    brandText.appendChild(UI.h('span', 'a-side-brand-sub', 'Admin portal'));
+    brand.appendChild(brandText);
     aside.appendChild(brand);
 
     if (me) {
