@@ -279,7 +279,10 @@ var APUI = (function () {
     host.appendChild(node);
     setTimeout(function () {
       node.classList.add('is-out');
-      node.addEventListener('animationend', function () { node.remove(); });
+      var done = false;
+      var cleanup = function () { if (!done) { done = true; node.remove(); } };
+      node.addEventListener('animationend', cleanup);
+      setTimeout(cleanup, 500);
     }, 3600);
   }
 

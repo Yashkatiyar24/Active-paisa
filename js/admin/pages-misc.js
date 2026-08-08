@@ -104,8 +104,10 @@
         host.appendChild(card);
       }).catch(function (err) {
         host.textContent = '';
-        body = X.bodyFor(X.card('All customers'));
+        var card = X.card('All customers');
+        var body = X.bodyFor(card);
         body.appendChild(UI.emptyState('users', 'Could not load customers', String((err && err.message) || err)));
+        host.appendChild(card);
       });
     }
     paint();
@@ -309,7 +311,9 @@
           ctl.title = u.enabled ? 'Disable account' : 'Enable account';
           ctl.appendChild(UI.icon(u.enabled ? 'shield' : 'user', 16));
           ctl.addEventListener('click', function () {
-            if (u.id === Store.currentUser().id) { UI.toast('You cannot disable your own account.', 'error'); return; }
+            var me = Store.currentUser();
+            if (!me) { location.replace('login.html'); return; }
+            if (u.id === me.id) { UI.toast('You cannot disable your own account.', 'error'); return; }
             Store.setUserEnabled(u.id, !u.enabled);
             paint();
           });
@@ -496,7 +500,8 @@
       var pill = X.countPill(unread, ' unread');
       pill.classList.add('a-pill-unread');
       head.appendChild(pill);
-      var refreshBtn = UI.h('button', 'a-icon-btn a-refresh-btn', { title: 'Refresh' });
+      var refreshBtn = UI.h('button', 'a-icon-btn a-refresh-btn');
+      refreshBtn.title = 'Refresh';
       refreshBtn.appendChild(UI.icon('refresh', 17));
       refreshBtn.addEventListener('click', function () { refresh(); });
       head.appendChild(refreshBtn);
@@ -569,7 +574,9 @@
 
       var actions = UI.h('div', 'a-notif-actions');
       if (!n.read) {
-        var markRead = UI.h('button', 'a-icon-btn a-notif-markread', { title: 'Mark as read', 'aria-label': 'Mark as read' });
+        var markRead = UI.h('button', 'a-icon-btn a-notif-markread');
+        markRead.title = 'Mark as read';
+        markRead.setAttribute('aria-label', 'Mark as read');
         markRead.appendChild(UI.icon('check', 15));
         markRead.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -579,7 +586,9 @@
         actions.appendChild(markRead);
       }
       if (n.application_id) {
-        var open = UI.h('button', 'a-icon-btn a-notif-open', { title: 'Open application', 'aria-label': 'Open application' });
+        var open = UI.h('button', 'a-icon-btn a-notif-open');
+        open.title = 'Open application';
+        open.setAttribute('aria-label', 'Open application');
         open.appendChild(UI.icon('chevronRight', 15));
         open.addEventListener('click', function (e) {
           e.stopPropagation();

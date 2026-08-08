@@ -39,7 +39,7 @@ var APAdmin = (function () {
      unknown files are handled by the boot guard, not normalised here. */
   function currentPage() {
     var p = pageFromUrl();
-    return p && ROUTES[p] ? p : p || 'dashboard';
+    return (p && ROUTES[p]) ? p : 'dashboard';
   }
 
   /* ---------- theme ---------- */
@@ -81,9 +81,10 @@ var APAdmin = (function () {
 
     /* Restore scroll position for this page */
     var scrollKey = 'ap_admin_scroll_' + page;
-    var savedScroll = sessionStorage.getItem(scrollKey);
-    if (savedScroll) {
-      try { var s = JSON.parse(savedScroll); if (s.page === page) savedScroll = s.y; } catch (e) {}
+    var savedScrollJson = sessionStorage.getItem(scrollKey);
+    var savedScroll = null;
+    if (savedScrollJson) {
+      try { var s = JSON.parse(savedScrollJson); if (s.page === page) savedScroll = s.y; } catch (e) {}
     }
 
     /* Render shell + skeleton immediately, then hydrate */
@@ -154,10 +155,10 @@ var APAdmin = (function () {
       renderPageContent(page, host, savedScroll);
       Store.connect();
     }).catch(function (e) {
-      if (e === 'Not signed in') { location.replace('login.html'); return; }
+      var msg = (e && (e.message || String(e))) || 'Unknown error';
+      if (msg === 'Not signed in') { location.replace('login.html'); return; }
       host.innerHTML = '';
-      host.appendChild(UI.emptyState('apps', 'Could not load data',
-        String((e && e.message) || e), UI.h('button', 'btn btn-ghost btn-sm', 'Retry')));
+      host.appendChild(UI.emptyState('apps', 'Could not load data', msg, UI.h('button', 'btn btn-ghost btn-sm', 'Retry')));
     });
   }
 

@@ -279,6 +279,8 @@ APAdmin.register('applications', (function () {
       if (state.q) qs.push('search=' + encodeURIComponent(state.q));
       if (state.status) qs.push('status=' + encodeURIComponent(state.status));
       if (state.loan) qs.push('loan_type=' + encodeURIComponent(state.loan));
+      if (state.exec) qs.push('executive=' + encodeURIComponent(state.exec));
+      if (state.city) qs.push('city=' + encodeURIComponent(state.city));
     }
     var url = '/api/v1/export?fmt=' + (excel ? 'xlsx' : 'csv') + (qs.length ? '&' + qs.join('&') : '');
     var s = Store.session();
@@ -295,7 +297,7 @@ APAdmin.register('applications', (function () {
           document.body.appendChild(a);
           a.click();
           a.remove();
-          URL.revokeObjectURL(a.href);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 100);
           UI.toast(excel ? 'Excel export downloaded.' : 'CSV export downloaded.', 'success');
         })
         .catch(function (e) { UI.toast((e && e.message) || 'Export failed.', 'error'); });

@@ -297,11 +297,11 @@ function backLink() {
       save.disabled = true;
       save.textContent = 'Uploading\u2026';
       Store.uploadDocument(app.id, file, labelIn.value.trim() || 'Document').then(function (r) {
-        if (!r.ok) { UI.toast(r.error || 'Upload failed.', 'error'); return; }
+        if (!r.ok) { UI.toast(r.error || 'Upload failed.', 'error'); save.disabled = false; save.textContent = 'Upload'; return; }
         UI.toast('Document uploaded.', 'success');
         m.close();
         refresh();
-      }).catch(function (err) { UI.toast((err && err.message) || 'Upload failed.', 'error'); save.disabled = false; });
+      }).catch(function (err) { UI.toast((err && err.message) || 'Upload failed.', 'error'); save.disabled = false; save.textContent = 'Upload'; });
     });
     actions.appendChild(cancel);
     actions.appendChild(save);
