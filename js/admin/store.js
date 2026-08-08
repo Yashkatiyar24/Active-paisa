@@ -144,7 +144,10 @@ var APStore = (function () {
     };
     var s = session();
     if (s && s.token) init.headers['Authorization'] = 'Bearer ' + s.token;
-    if (body !== undefined && body !== null) init.body = JSON.stringify(body);
+    if (body !== undefined && body !== null) {
+      if (typeof FormData !== 'undefined' && body instanceof FormData) init.body = body;
+      else init.body = JSON.stringify(body);
+    }
     if (opts && opts.noJson) delete init.headers['Content-Type'];
     return fetch(API + path, init).then(function (res) {
       if (res.status === 401) {
@@ -158,6 +161,7 @@ var APStore = (function () {
           throw e;
         });
       }
+      if (opts && opts.raw) return res;
       return res.status === 204 ? null : res.json();
     });
   }
@@ -394,33 +398,130 @@ var APStore = (function () {
   }
 
   /* ---------- notifications ---------- */
+  /* Read state is stored on the server (Notification.read). The local
+     read-set is only a fast fallback for optimistic UI while the API call
+     settles. */
   function readSet() {
     try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); }
     catch (e) { return new Set(); }
   }
   function saveReadSet(s) { localStorage.setItem(READ_KEY, JSON.stringify(Array.from(s))); }
   function notifications() {
-    var set = readSet();
-    return cache.notifs.map(function (n) {
-      var x = Object.assign({}, n);
-      x.read = set.has(String(x.id));
-      return x;
-    });
+    return cache.notifs.map(function (n) { return Object.assign({}, n); });
   }
   function unreadCount() {
-    return notifications().filter(function (n) { return !n.read; }).length;
+    return cache.notifs.filter(function (n) { return !n.read; }).length;
   }
   function markRead(id) {
-    var s = readSet();
-    s.add(String(id));
-    saveReadSet(s);
+    cache.notifs = cache.notifs.map(function (n) {
+      if (String(n.id) === String(id)) {
+        n.read = true;
+        var s = readSet(); s.add(String(id)); saveReadSet(s);
+      }
+      return n;
+    });
     changed();
+    request('POST', '/notifications/' + id + '/read', {})
+      .then(function () { changed(); })
+      .catch(function () {});
   }
   function markAllRead() {
-    var s = readSet();
-    cache.notifs.forEach(function (n) { s.add(String(n.id)); });
-    saveReadSet(s);
+    cache.notifs.forEach(function (n) { n.read = true; saveReadSet(new Set(cache.notifs.map(function (x) { return String(x.id); }))); });
     changed();
+    request('POST', '/notifications/read-all', {})
+      .catch(function () {});
+  }
+
+  /* ---------- customers ---------- */
+  function customers(params) {
+    var q = [];
+    var search = (params && params.search) || '';
+    var page = (params && params.page) || 1;
+    var perPage = (params && params.per_page) || 50;
+    if (search) q.push('search=' + encodeURIComponent(search));
+    q.push('page=' + page);
+    q.push('per_page=' + perPage);
+    return request('GET', '/customers?' + q.join('&'));
+  }
+  function customer(id) {
+    return request('GET', '/customers/' + id);
+  }
+  function globalSearch(q) {
+    return request('GET', '/search?q=' + encodeURIComponent(q) + '&limit=20');
+  }
+
+  /* ---------- application editing (customer / loan) ---------- */
+  function updateCustomer(appId, data) {
+    return request('PATCH', '/applications/' + appId + '/customer', data).then(function (serial) {
+      replaceInCache(serial);
+      changed();
+      return { ok: true };
+    }).catch(function (err) { return { ok: false, error: err.message }; });
+  }
+  function updateLoan(appId, data) {
+    return request('PATCH', '/applications/' + appId + '/loan', data).then(function (serial) {
+      replaceInCache(serial);
+      changed();
+      return { ok: true };
+    }).catch(function (err) { return { ok: false, error: err.message }; });
+  }
+
+  /* ---------- documents ---------- */
+  function downloadDocument(doc) {
+    return request('GET', '/documents/' + doc.id + '/download', undefined, { noJson: true, raw: true })
+      .then(function (res) {
+        var cd = (res.headers.get('content-disposition') || '');
+        var name = doc.name || decodeURIComponent(((cd.split('filename="')[1] || '').replace(/"/g, '')) || 'document');
+        return res.blob().then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = name;
+          document.body.appendChild(a); a.click();
+          setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 400);
+        });
+      });
+  }
+  function uploadDocument(appId, file, label) {
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('label', label || 'Document');
+    return request('POST', '/applications/' + appId + '/documents', fd, { noJson: true })
+      .then(function (serial) {
+        var app = getApplication(appId);
+        if (app) {
+          app.docs = app.docs || [];
+          app.docs.unshift(serial);
+          replaceInCache(app);
+          changed();
+        }
+        return { ok: true };
+      })
+      .catch(function (err) { return { ok: false, error: err.message }; });
+  }
+  function updateDocument(docId, status) {
+    return request('PATCH', '/documents/' + docId, { status: status })
+      .then(function (serial) {
+        cache.apps = cache.apps.map(function (a) {
+          if (!a.docs) return a;
+          a.docs = a.docs.map(function (d) { return String(d.id) === String(docId) ? serial : d; });
+          return a;
+        });
+        changed();
+        return { ok: true };
+      })
+      .catch(function (err) { return { ok: false, error: err.message }; });
+  }
+
+  /* ---------- reports ---------- */
+  function reports(period) {
+    return request('GET', '/reports?period=' + (period || 'month'));
+  }
+  function refreshApplication(id) {
+    return request('GET', '/applications/' + id).then(function (serial) {
+      replaceInCache(serial);
+      changed();
+      return serial;
+    });
   }
 
   /* ---------- stats (from dashboard analytics) ---------- */
@@ -438,7 +539,9 @@ var APStore = (function () {
       approved: d.approved || 0,
       rejected: d.rejected || 0,
       assigned: d.assigned || 0,
-      unassigned: d.unassigned || 0
+      unassigned: d.unassigned || 0,
+      conversionRate: d.conversionRate || 0,
+      avgProcessingDays: d.avgProcessingDays || 0
     };
   }
   function byMonth() {
@@ -504,8 +607,12 @@ var APStore = (function () {
     listApplications: listApplications, getApplication: getApplication, visible: visible,
     nextStatuses: nextStatuses,
     insertApplication: insertApplication, setStatus: setStatus, setAssignee: setAssignee, addNote: addNote,
+    updateCustomer: updateCustomer, updateLoan: updateLoan,
     users: users, addUser: addUser, setUserEnabled: setUserEnabled,
     notifications: notifications, unreadCount: unreadCount, markAllRead: markAllRead, markRead: markRead,
+    customers: customers, customer: customer, globalSearch: globalSearch,
+    downloadDocument: downloadDocument, uploadDocument: uploadDocument, updateDocument: updateDocument,
+    reports: reports, refreshApplication: refreshApplication,
     stats: stats, byMonth: byMonth, byLoanType: byLoanType,
     formatMoney: formatMoney,
     load, connect: connect, disconnect: disconnect

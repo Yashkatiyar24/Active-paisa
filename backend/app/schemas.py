@@ -54,6 +54,13 @@ class CustomerSubmit(BaseModel):
     gstin: Optional[str] = None
 
 
+class HomeLoanSubmit(BaseModel):
+    propertyCity: str = ""
+    propertyValue: int = 0
+    purpose: str = ""
+    obligations: int = 0
+
+
 class ApplicationSubmit(BaseModel):
     loanType: str = ""
     loanLabel: str = ""
@@ -66,6 +73,7 @@ class ApplicationSubmit(BaseModel):
     docs: list[dict[str, Any]] = Field(default_factory=list)
     source: str = "website"
     requestedRef: Optional[str] = None
+    home: Optional[HomeLoanSubmit] = None
 
     @field_validator("amount")
     @classmethod

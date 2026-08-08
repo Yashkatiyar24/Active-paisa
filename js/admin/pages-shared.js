@@ -110,6 +110,42 @@ function appUrl(id) { return 'application.html?id=' + encodeURIComponent(id); }
     });
     ctx.textAlign = 'left';
   }
+  function drawDisbursed(host, buckets) {
+    var ctx = canvas(host);
+    var g = colours();
+    var max = 1;
+    buckets.forEach(function (b) { if (b.applications > max) max = b.applications; });
+    var maxD = 1;
+    buckets.forEach(function (b) { if (b.disbursed > maxD) maxD = b.disbursed; });
+    var left = 40, right = 8, top = 22, bottom = 30;
+    var bw = (ctx.canvas.width - left - right) / Math.max(buckets.length, 1);
+    ctx.font = '11px Inter, sans-serif';
+    ctx.strokeStyle = g.grid;
+    ctx.lineWidth = 1;
+    for (var k = 0; k <= 4; k++) {
+      var y = top + ((ctx.canvas.height - top - bottom) / 4) * k;
+      ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(ctx.canvas.width - right, y); ctx.stroke();
+    }
+    buckets.forEach(function (b, i) {
+      var x = left + i * bw;
+      var w = Math.max(6, bw * 0.34);
+      /* applications bar */
+      var h = (b.applications / max) * (ctx.canvas.height - top - bottom);
+      ctx.fillStyle = g.bar;
+      ctx.fillRect(x, ctx.canvas.height - bottom - h, w, h);
+      /* disbursed bar (secondary) */
+      var h2 = (b.disbursed / maxD) * (ctx.canvas.height - top - bottom);
+      ctx.fillStyle = g.palette[1];
+      ctx.fillRect(x + w + 2, ctx.canvas.height - bottom - h2, w, h2);
+      ctx.fillStyle = g.ink;
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, x + w + 1, ctx.canvas.height - bottom + 16);
+      if (b.applications) ctx.fillText(String(b.applications), x + w / 2, ctx.canvas.height - bottom - h - 5);
+      if (b.disbursed) ctx.fillText(compactNum(b.disbursed), x + w + 2 + w / 2, ctx.canvas.height - bottom - h2 - 5);
+    });
+    ctx.textAlign = 'left';
+  }
+
   function drawDonut(host, items) {
     var ctx = canvas(host, 460, 210);
     var g = colours();
@@ -152,11 +188,17 @@ function appUrl(id) { return 'application.html?id=' + encodeURIComponent(id); }
   function totalOf(items) {
     return items.reduce(function (s, x) { return s + x.count; }, 0);
   }
+  function compactNum(n) {
+    if (n >= 10000000) return (n / 10000000).toFixed(1).replace(/\.0$/, '') + 'Cr';
+    if (n >= 100000) return (n / 100000).toFixed(1).replace(/\.0$/, '') + 'L';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
 
   return {
     opt: opt, link: link, btnLink: btnLink, field: field,
     countPill: countPill, executives: executives, appUrl: appUrl, shortLoan: shortLoan,
     card: card, bodyFor: bodyFor,
-    colours: colours, drawBar: drawBar, drawDonut: drawDonut, totalOf: totalOf
+    colours: colours, drawBar: drawBar, drawDonut: drawDonut, drawDisbursed: drawDisbursed, totalOf: totalOf
   };
 })();

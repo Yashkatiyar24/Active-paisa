@@ -68,6 +68,7 @@ def submit_application(body: ApplicationSubmit, request: Request, db: Session = 
     db.flush()
 
     ua = request.headers.get("user-agent", "")
+    home = body.home
     app = LoanApplication(
         application_number=_make_number(db),
         reference_number=make_reference_number(),
@@ -83,11 +84,18 @@ def submit_application(body: ApplicationSubmit, request: Request, db: Session = 
         device=detect_device(ua),
         submitted_at=datetime.now(timezone.utc),
         created=datetime.now(timezone.utc),
+        property_city=(home.propertyCity if home else None) or None,
+        property_value=_num(home.propertyValue) or None if home else None,
+        purpose=(home.purpose if home else None) or None,
+        monthly_obligations=_num(home.obligations) or None if home else None,
     )
     db.add(app)
     db.flush()
 
     log_activity(db, app, "application_created", "Application submitted via activpaisa.com.", actor="Website")
+    from ..models import notify as _notify
+    _notify(db, app, "new_application", "New application",
+            f"{body.loanLabel or 'Loan'} received for {customer.name or 'a customer'}.")
     db.commit()
 
     return ApplicationSubmitResponse(

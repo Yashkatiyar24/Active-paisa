@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from .database import get_db
-from .models import Admin, ApplicationActivity, ApplicationNote, ApplicationStatusHistory, LoanApplication
+from .models import Admin, ApplicationActivity, ApplicationDocument, ApplicationNote, ApplicationStatusHistory, Customer, LoanApplication
 from .security import decode_access_token
 
 
@@ -83,6 +83,7 @@ def serialize_customer(c: Customer) -> dict:
         "pan": c.pan or "",
         "dob": c.dob or "",
         "city": c.city or "",
+        "state": c.state or "",
         "pincode": c.pincode or "",
         "gender": c.gender or "",
         "employment": c.employment_type or "",
@@ -96,6 +97,7 @@ def serialize_customer(c: Customer) -> dict:
         "consentTerms": c.consent_terms,
         "consentPrivacy": c.consent_privacy,
         "consentDeclaration": c.consent_declaration,
+        "created": epoch_ms(c.created_at),
     }
 
 
@@ -115,6 +117,19 @@ def serialize_activity(a: ApplicationActivity) -> dict:
         "text": a.text,
         "actor": a.actor,
         "at": epoch_ms(a.created_at),
+    }
+
+
+def serialize_document(d: ApplicationDocument) -> dict:
+    return {
+        "id": str(d.id),
+        "label": d.label or "",
+        "name": d.filename,
+        "size": d.size,
+        "status": d.status,
+        "uploadedBy": d.uploaded_by,
+        "at": epoch_ms(d.created_at),
+        "contentType": d.content_type,
     }
 
 
@@ -139,10 +154,15 @@ def serialize_application(app: LoanApplication) -> dict:
         "source": app.source,
         "ip": app.ip_address,
         "device": app.device,
+        "propertyCity": app.property_city or "",
+        "propertyValue": app.property_value or 0,
+        "purpose": app.purpose or "",
+        "monthlyObligations": app.monthly_obligations or 0,
+        "rejectionReason": app.rejection_reason or "",
         "customer": serialize_customer(customer) if customer else {},
         "timeline": timeline,
         "notes": [serialize_note(n) for n in sorted(app.notes, key=lambda n: n.created_at, reverse=True)],
-        "docs": [],
+        "docs": [serialize_document(d) for d in sorted(app.documents, key=lambda d: d.created_at, reverse=True)],
         "consent": {
             "terms": (customer.consent_terms if customer else False),
             "privacy": (customer.consent_privacy if customer else False),

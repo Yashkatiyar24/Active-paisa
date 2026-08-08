@@ -207,11 +207,77 @@ var APAdmin = (function () {
     bar.appendChild(title);
 
     var right = UI.h('div', 'a-top-right');
+    right.appendChild(globalSearch());
     right.appendChild(themeToggle());
     right.appendChild(bell());
     right.appendChild(userMenu());
     bar.appendChild(right);
     return bar;
+  }
+
+  function globalSearch() {
+    var wrap = UI.h('div', 'a-gsearch');
+    var ic = UI.h('span', 'a-gsearch-ic');
+    ic.appendChild(UI.icon('search', 15));
+    wrap.appendChild(ic);
+    var input = UI.h('input');
+    input.type = 'search';
+    input.placeholder = 'Search applications, customers\u2026';
+    wrap.appendChild(input);
+    var menu = null, box = null;
+    var deb = null;
+    input.addEventListener('input', function () {
+      clearTimeout(deb);
+      var q = input.value.trim();
+      if (!q) { if (box) { box.remove(); box = null; } return; }
+      deb = setTimeout(function () {
+        Store.globalSearch(q).then(function (res) {
+          showResults(q, res);
+        }).catch(function () {});
+      }, 200);
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { if (box) { box.remove(); box = null; } input.blur(); }
+    });
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) { if (box) { box.remove(); box = null; } }
+    });
+    return wrap;
+
+    function row(kind, iconGlyph, title, sub, href) {
+      var a = UI.h('a', 'a-gs-row');
+      a.href = href;
+      a.appendChild(UI.icon(iconGlyph, 16));
+      var t = UI.h('div', null);
+      t.appendChild(UI.h('strong', null, title));
+      t.appendChild(UI.h('span', null, sub));
+      a.appendChild(t);
+      return a;
+    }
+    function showResults(q, res) {
+      if (box) box.remove();
+      box = UI.h('div', 'a-gs-menu');
+      var any = false;
+      (res.customers || []).slice(0, 5).forEach(function (c) {
+        any = true;
+        box.appendChild(row('customer', 'user', c.name || c.mobile || c.email,
+          c.mobile || c.email, 'customers.html'));
+      });
+      (res.applications || []).slice(0, 8).forEach(function (a) {
+        any = true;
+        box.appendChild(row('application', 'apps', (a.name || 'Customer') + ' \u00B7 ' + a.ref,
+          'Status: ' + a.status, 'application.html?id=' + encodeURIComponent(a.id)));
+      });
+      (res.executives || []).slice(0, 3).forEach(function (e) {
+        any = true;
+        box.appendChild(row('executive', 'briefcase', e.name, e.email, 'executives.html'));
+      });
+      if (!any) {
+        var none = UI.h('p', 'a-gs-empty', 'No results for \u201C' + q + '\u201D');
+        box.appendChild(none);
+      }
+      wrap.appendChild(box);
+    }
   }
 
   function themeToggle() {
@@ -249,15 +315,18 @@ var APAdmin = (function () {
           meta.appendChild(UI.h('span', null, UI.timeAgo(n.at)));
           item.appendChild(meta);
           item.appendChild(UI.h('span', 'a-notif-b', n.body));
-          item.dataset.action = 'open:' + n.id;
+          item.dataset.action = 'open:' + n.id + ':' + (n.application_id || '');
           root.appendChild(item);
         });
         root.appendChild(UI.menuItem('Mark all read', 'mark-all'));
       }, function (action) {
         if (action === 'mark-all') { Store.markAllRead(); paintCount(); }
         else {
-          var id = action.split(':')[1];
+          var parts = action.split(':');
+          var id = parts[1];
+          var appId = parts[2];
           if (id) { Store.markRead(id); paintCount(); }
+          if (appId) location.href = 'application.html?id=' + encodeURIComponent(appId);
         }
       });
     });

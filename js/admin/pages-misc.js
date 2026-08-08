@@ -32,70 +32,102 @@
      CUSTOMERS
      ====================================================================== */
   APAdmin.register('customers', function (host) {
+    var state = { q: '', page: 1, per: 50 };
+
     function paint() {
       host.textContent = '';
-      var map = {};
-      Store.listApplications().forEach(function (a) {
-        var name = a.customer.name || 'Unknown';
-        map[name] = map[name] || { name: name, email: a.customer.email, phone: a.customer.phone, apps: 0, amount: 0, last: 0 };
-        var c = map[name];
-        c.apps++;
-        c.amount += a.amount;
-        if (a.created > c.last) c.last = a.created;
-      });
-      var customers = Object.keys(map).map(function (k) { return map[k]; }).sort(function (x, y) { return y.last - x.last; });
-
       var head = UI.h('div', 'a-section-head');
       head.appendChild(UI.h('h2', null, 'Customers'));
-      head.appendChild(X.countPill(customers.length, ' customers'));
+      head.appendChild(UI.h('span', 'a-count-pill', '\u2026'));
       host.appendChild(head);
 
       var card = X.card('All customers');
       var body = X.bodyFor(card);
-      if (!customers.length) {
-        body.appendChild(UI.emptyState('users', 'No customers yet', 'Customers appear as soon as applications come in.'));
-        host.appendChild(card);
-        return;
-      }
-      var t = UI.h('table', 'a-table');
-      var thead = document.createElement('thead');
-      thead.appendChild(tableHeadT(['Customer', 'Mobile', 'Applications', 'Total value', 'Last activity']));
-      t.appendChild(thead);
-      var tbody = document.createElement('tbody');
-      customers.forEach(function (c) {
-        var tr = document.createElement('tr');
-        var who = UI.h('div', 'a-who');
-        who.appendChild(UI.avatar(c.name, 32, uiColor(c.name)));
-        var wt = UI.h('div', 'a-who-text');
-        wt.appendChild(UI.h('strong', null, c.name));
-        wt.appendChild(UI.h('span', null, (c.email || '').toLowerCase()));
-        who.appendChild(wt);
-        tr.appendChild(td(who));
-        tr.appendChild(td(c.phone || '\u2014'));
-        tr.appendChild(td(String(c.apps)));
-        tr.appendChild(td(UI.rupees(c.amount)));
-        tr.appendChild(td(UI.timeAgo(c.last)));
-        tr.classList.add('is-clickable');
-        tr.addEventListener('click', function () { customerModal(c); });
-        tbody.appendChild(tr);
-      });
-      t.appendChild(tbody);
-      body.appendChild(t);
+      body.appendChild(UI.h('p', 'a-muted', 'Loading\u2026'));
       host.appendChild(card);
+
+      Store.customers({ search: state.q, page: state.page, per_page: state.per }).then(function (res) {
+        var customers = res.items || [];
+        host.textContent = '';
+        head = UI.h('div', 'a-section-head');
+        head.appendChild(UI.h('h2', null, 'Customers'));
+        head.appendChild(X.countPill(res.total || 0, ' customers'));
+        host.appendChild(head);
+
+        var bar = UI.h('div', 'a-filters');
+        var search = UI.h('div', 'a-search');
+        search.appendChild(UI.icon('search', 16));
+        var si = UI.h('input');
+        si.type = 'search'; si.placeholder = 'Search name, mobile, email, PAN\u2026';
+        search.appendChild(si);
+        var deb = null;
+        si.addEventListener('input', function () {
+          clearTimeout(deb);
+          deb = setTimeout(function () { state.q = si.value.trim(); state.page = 1; paint(); }, 220);
+        });
+        bar.appendChild(search);
+        host.appendChild(bar);
+
+        var card = X.card('All customers');
+        var b2 = X.bodyFor(card);
+        if (!customers.length) {
+          b2.appendChild(UI.emptyState('users', state.q ? 'No customers match' : 'No customers yet',
+            state.q ? 'Try a different search.' : 'Customers appear as soon as applications come in.'));
+          host.appendChild(card);
+          return;
+        }
+        var t = UI.h('table', 'a-table');
+        var thead = document.createElement('thead');
+        thead.appendChild(tableHeadT(['Customer', 'Mobile', 'Applications', 'Total value', 'State', 'Joined']));
+        t.appendChild(thead);
+        var tbody = document.createElement('tbody');
+        customers.forEach(function (c) {
+          var tr = document.createElement('tr');
+          var who = UI.h('div', 'a-who');
+          who.appendChild(UI.avatar(c.name || c.phone || '?', 32, uiColor(c.name || c.phone || '?')));
+          var wt = UI.h('div', 'a-who-text');
+          wt.appendChild(UI.h('strong', null, c.name || '\u2014'));
+          wt.appendChild(UI.h('span', null, (c.email || '').toLowerCase()));
+          who.appendChild(wt);
+          tr.appendChild(td(who));
+          tr.appendChild(td(c.phone || '\u2014'));
+          tr.appendChild(td(String(c.apps || 0)));
+          tr.appendChild(td(UI.rupees(c.totalValue || 0)));
+          tr.appendChild(td(c.state || '\u2014'));
+          tr.appendChild(td(c.created ? UI.timeAgo(c.created) : '\u2014'));
+          tr.classList.add('is-clickable');
+          tr.addEventListener('click', function () { customerModal(c); });
+          tbody.appendChild(tr);
+        });
+        t.appendChild(tbody);
+        b2.appendChild(t);
+        host.appendChild(card);
+      }).catch(function (err) {
+        host.textContent = '';
+        body = X.bodyFor(X.card('All customers'));
+        body.appendChild(UI.emptyState('users', 'Could not load customers', String((err && err.message) || err)));
+      });
     }
     paint();
   });
 
   function customerModal(c) {
-    var m = UI.modal({ title: c.name });
+    var m = UI.modal({ title: String(c.name || '') || 'Customer' });
     var b = m.body;
     b.appendChild(UI.h('p', 'a-muted', ((c.email || '').toLowerCase()) + (c.phone ? ' \u00B7 ' + c.phone : '')));
-    var apps = Store.listApplications().filter(function (a) { return (a.customer.name || '') === c.name; });
-    var list = UI.h('div', 'a-feed');
-    apps.forEach(function (a) {
-      list.appendChild(appRowLink(a));
+    b.appendChild(UI.h('p', 'a-muted', ((c.state ? 'State: ' + c.state : '') + (c.city ? ' \u00B7 City: ' + c.city : ''))));
+    b.appendChild(UI.h('p', 'a-muted', 'Loading applications\u2026'));
+    Store.customer(c.id).then(function (full) {
+      b.textContent = '';
+      b.appendChild(UI.h('p', 'a-muted', ((full.email || '').toLowerCase()) + (full.phone ? ' \u00B7 ' + full.phone : '') + (full.pan ? ' \u00B7 PAN ' + full.pan : '') + (full.state ? ' \u00B7 ' + full.state : '')));
+      var apps = full.applications || [];
+      if (!apps.length) { b.appendChild(UI.h('p', 'a-muted', 'No applications yet.')); return; }
+      var list = UI.h('div', 'a-feed');
+      apps.slice(0, 20).forEach(function (a) { list.appendChild(appRowLink(a)); });
+      b.appendChild(list);
+    }).catch(function () {
+      b.appendChild(UI.h('p', 'a-muted', 'Could not load applications.'));
     });
-    b.appendChild(list);
   }
   function appRowLink(a) {
     var row = UI.h('a', 'a-feed-row');
@@ -171,22 +203,61 @@
         var tr = document.createElement('tr');
         var pair = UI.h('div', 'a-who');
         pair.appendChild(UI.h('span', 'a-doc-ic', UI.icon(/\.pdf$/i.test(r.doc.name) ? 'docs' : 'image', 15)));
-        pair.appendChild(UI.h('strong', null, r.doc.label || r.doc.name));
+        var pt = UI.h('div', 'a-who-text');
+        pt.appendChild(UI.h('strong', null, r.doc.label || r.doc.name));
+        pt.appendChild(UI.h('span', null, (r.doc.uploadedBy ? r.doc.uploadedBy + ' \u00B7 ' : '') + UI.timeAgo(r.doc.at)));
+        pair.appendChild(pt);
         tr.appendChild(td(pair));
         var refLink = UI.h('a', 'ci-link', r.app.ref);
         refLink.href = X.appUrl(r.app.id);
         tr.appendChild(td(refLink));
         tr.appendChild(td(r.app.customer.name || ''));
         tr.appendChild(td(r.doc.size || '\u2014'));
-        tr.appendChild(td(UI.chip(r.app.status)));
+        tr.appendChild(td(UI.chip(r.doc.status === 'verified' ? 'approved' : (r.doc.status === 'rejected' ? 'rejected' : ('new')))));
+        var tools = UI.h('div', 'a-doc-tools');
         var dl = UI.h('button', 'a-icon-btn');
         dl.appendChild(UI.icon('download', 15));
         dl.addEventListener('click', function () {
-          UI.download(r.doc.name, r.app.ref + '\n' + (r.doc.label || r.doc.name) + '\n\nPlaceholder document.', 'text/plain');
+          Store.downloadDocument(r.doc).catch(function (err) { UI.toast(err.message || 'Download failed.', 'error'); });
         });
-        tr.appendChild(td(dl));
+        tools.appendChild(dl);
+        if (Store.can('edit_status') && r.doc.status !== 'verified') {
+          var v = UI.h('button', 'a-icon-btn');
+          v.appendChild(UI.icon('check', 15));
+          v.title = 'Verify';
+          v.addEventListener('click', function () {
+            Store.updateDocument(r.doc.id, 'verified').then(function (res) {
+              if (!res.ok) { UI.toast(res.error || 'Could not verify.', 'error'); return; }
+              UI.toast('Document verified.', 'success');
+              Store.refreshApplication(r.app.id).then(function () { paint(); });
+            });
+          });
+          tools.appendChild(v);
+        }
+        if (Store.can('edit_status') && r.doc.status !== 'rejected') {
+          var rx = UI.h('button', 'a-icon-btn');
+          rx.appendChild(UI.icon('x', 15));
+          rx.title = 'Reject';
+          rx.addEventListener('click', function () {
+            Store.updateDocument(r.doc.id, 'rejected').then(function (res) {
+              if (!res.ok) { UI.toast(res.error || 'Could not reject.', 'error'); return; }
+              UI.toast('Document rejected.', 'success');
+              Store.refreshApplication(r.app.id).then(function () { paint(); });
+            });
+          });
+          tools.appendChild(rx);
+        }
+        tr.appendChild(td(tools));
         tbody.appendChild(tr);
       });
+      if (list.length > 60) {
+        var more = document.createElement('tr');
+        var moreTd = document.createElement('td');
+        moreTd.colSpan = 6;
+        moreTd.appendChild(UI.h('p', 'a-muted', 'Showing first 60 \u2014 refine your search.'));
+        more.appendChild(moreTd);
+        tbody.appendChild(more);
+      }
       t.appendChild(tbody);
       body.appendChild(t);
       host.appendChild(card);
@@ -296,81 +367,117 @@
      REPORTS
      ====================================================================== */
   APAdmin.register('reports', function (host) {
-    var st = Store.stats();
+    var period = 'month';
 
-    var kpis = UI.h('div', 'a-kpi-grid');
-    kpis.appendChild(UI.kpi('Total applications', String(st.total)));
-    kpis.appendChild(UI.kpi('Disbursed value', UI.rupees(st.totalDisbursed), st.disbursed + ' loans paid out'));
-    kpis.appendChild(UI.kpi('Rejected', String(st.rejected || 0), pct(st, 'rejected') + '% of all applications'));
-    kpis.appendChild(UI.kpi('This month', String(st.monthApps), 'new applications'));
-    host.appendChild(kpis);
-    function pct(st2, key) {
-      var n = st2[key] || 0;
-      return st2.total ? Math.round(n / st2.total * 100) : 0;
+    function paint() {
+      host.textContent = '';
+      host.appendChild(UI.h('h2', 'a-page-title', 'Reports'));
+      var head = UI.h('div', 'a-section-head');
+      head.appendChild(UI.h('p', 'a-muted', 'Loading\u2026'));
+      host.appendChild(head);
+
+      Store.reports(period).then(function (r) {
+        host.textContent = '';
+        var head = UI.h('div', 'a-section-head');
+        head.appendChild(UI.h('h2', null, 'Reports'));
+        var sel = UI.h('select');
+        [['month', 'Last 12 months'], ['week', 'Last 8 weeks'], ['day', 'Last 14 days']].forEach(function (p) {
+          sel.appendChild(X.opt(p[0], p[1]));
+        });
+        sel.value = period;
+        sel.addEventListener('change', function () { period = sel.value; paint(); });
+        var selWrap = UI.h('div', 'a-filter-right');
+        selWrap.appendChild(sel);
+        head.appendChild(selWrap);
+        host.appendChild(head);
+
+        var kpis = UI.h('div', 'a-kpi-grid');
+        kpis.appendChild(UI.kpi('Total applications', String(r.total)));
+        kpis.appendChild(UI.kpi('Conversion rate', r.conversionRate + '%', 'approved \u00F7 total'));
+        kpis.appendChild(UI.kpi('Rejection rate', r.rejectionRate + '%', 'of all applications'));
+        var funnelMap = {};
+        (r.funnel || []).forEach(function (f) { funnelMap[f.id] = f.count; });
+        kpis.appendChild(UI.kpi('In pipeline', String(r.total - (funnelMap.rejected || 0) - (funnelMap.closed || 0))));
+        host.appendChild(kpis);
+
+        var charts = UI.h('div', 'a-chart-grid');
+        var barCard = X.card('Applications vs disbursed value');
+        var barBody = X.bodyFor(barCard);
+        var barHost = UI.h('div', 'a-canvas-box');
+        barBody.appendChild(barHost);
+        charts.appendChild(barCard);
+        var donutCard = X.card('Share by loan type');
+        var dBody = X.bodyFor(donutCard);
+        var dHost = UI.h('div', 'a-canvas-box');
+        dBody.appendChild(dHost);
+        charts.appendChild(donutCard);
+        host.appendChild(charts);
+
+        X.drawDisbursed(barHost, r.revenue || []);
+        X.drawDonut(dHost, (r.distribution || []).filter(function (x) { return x.count > 0; }));
+
+        /* funnel table */
+        var fcard = X.card('Status funnel');
+        var fb = X.bodyFor(fcard);
+        var ft = UI.h('table', 'a-table');
+        var fthead = document.createElement('thead');
+        fthead.appendChild(tableHeadT(['Status', 'Applications', 'Share']));
+        ft.appendChild(fthead);
+        var ftb = document.createElement('tbody');
+        (r.funnel || []).forEach(function (f) {
+          var tr = document.createElement('tr');
+          tr.appendChild(td(Store.STATUS_MAP[f.id] ? Store.STATUS_MAP[f.id].label : f.id));
+          tr.appendChild(td(String(f.count)));
+          tr.appendChild(td((r.total ? Math.round(f.count / r.total * 100) : 0) + '%'));
+          ftb.appendChild(tr);
+        });
+        ft.appendChild(ftb);
+        fb.appendChild(ft);
+        host.appendChild(fcard);
+
+        /* executive perf */
+        var ecard = X.card('Executive performance', exportBtn(r));
+        var eb = X.bodyFor(ecard);
+        var et = UI.h('table', 'a-table');
+        var ethead = document.createElement('thead');
+        ethead.appendChild(tableHeadT(['Executive', 'Applications', 'Loan value', 'Active']));
+        et.appendChild(ethead);
+        var etb = document.createElement('tbody');
+        (r.executives || []).forEach(function (e) {
+          var tr = document.createElement('tr');
+          var who = UI.h('div', 'a-who');
+          who.appendChild(UI.avatar(e.name, 28, uiColor(e.name)));
+          who.appendChild(UI.h('strong', null, e.name));
+          tr.appendChild(td(who));
+          tr.appendChild(td(String(e.applications)));
+          tr.appendChild(td(UI.rupees(e.value)));
+          tr.appendChild(td(e.active ? UI.h('span', 'a-enabled', 'Active') : UI.h('span', 'a-disabled', 'Disabled')));
+          etb.appendChild(tr);
+        });
+        et.appendChild(etb);
+        eb.appendChild(et);
+        host.appendChild(ecard);
+      }).catch(function (err) {
+        host.textContent = '';
+        host.appendChild(UI.emptyState('reports', 'Could not load reports', String((err && err.message) || err)));
+      });
     }
 
-    var charts = UI.h('div', 'a-chart-grid');
-    var barCard = X.card('Applications \u00B7 last 12 months');
-    var barBody = X.bodyFor(barCard);
-    var barHost = UI.h('div', 'a-canvas-box');
-    barBody.appendChild(barHost);
-    charts.appendChild(barCard);
-    var donutCard = X.card('Share by loan type');
-    var dBody = X.bodyFor(donutCard);
-    var dHost = UI.h('div', 'a-canvas-box');
-    dBody.appendChild(dHost);
-    charts.appendChild(donutCard);
-    host.appendChild(charts);
-
-    /* enrichment: totals per loan */
-    var loanStats = {};
-    Store.listApplications().forEach(function (a) {
-      loanStats[a.loanId] = loanStats[a.loanId] || { n: 0, total: 0, disbursed: 0 };
-      loanStats[a.loanId].n++;
-      loanStats[a.loanId].total += a.amount;
-      if (a.status === 'disbursed') loanStats[a.loanId].disbursed++;
-    });
-
-    var card = X.card('Loan mix', exportBtn());
-    var body = X.bodyFor(card);
-    var t = UI.h('table', 'a-table');
-    var thead = document.createElement('thead');
-    thead.appendChild(tableHeadT(['Loan type', 'Applications', 'Total requested', 'Av.value', 'Disbursed']));
-    t.appendChild(thead);
-    var tbody = document.createElement('tbody');
-    Store.LOAN_TYPES.forEach(function (lt) {
-      var s = loanStats[lt.id] || { n: 0, total: 0, disbursed: 0 };
-      var tr = document.createElement('tr');
-      tr.appendChild(td(lt.label));
-      tr.appendChild(td(String(s.n)));
-      tr.appendChild(td(UI.rupees(s.total)));
-      tr.appendChild(td(s.n ? UI.rupees(s.total / s.n) : '\u2014'));
-      tr.appendChild(td(String(s.disbursed)));
-      tbody.appendChild(tr);
-    });
-    t.appendChild(tbody);
-    body.appendChild(t);
-    host.appendChild(card);
-
-    X.drawBar(barHost, Store.byMonth(12));
-    X.drawDonut(dHost, Store.byLoanType());
-
-    function exportBtn() {
-      if (!Store.can('export')) return null;
+    function exportBtn(r) {
       var btn = UI.h('button', 'a-icon-btn');
       btn.title = 'Export CSV';
       btn.appendChild(UI.icon('download', 16));
       btn.addEventListener('click', function () {
-        var rows = Store.LOAN_TYPES.map(function (lt) {
-          var s = loanStats[lt.id] || { n: 0, total: 0, disbursed: 0 };
-          return [lt.label, s.n, s.total, s.n ? Math.round(s.total / s.n) : 0, s.disbursed];
+        var rows = (r.executives || []).map(function (e) {
+          return [e.name, e.applications, e.value, e.active ? 'Active' : 'Disabled'];
         });
         UI.download('report-' + new Date().toISOString().slice(0, 10) + '.csv',
-          UI.toCSV(['Loan type', 'Applications', 'Total requested', 'Avg value', 'Disbursed'], rows), 'text/csv');
+          UI.toCSV(['Executive', 'Applications', 'Loan value', 'Active'], rows), 'text/csv');
         UI.toast('Report exported.', 'success');
       });
       return btn;
     }
+    paint();
   });
 
   /* ======================================================================
@@ -395,7 +502,7 @@
       }
       var rows = UI.h('div', 'a-notif-list');
       list.forEach(function (n) {
-        var item = UI.h('div', 'a-notif-item' + (n.read ? '' : ' is-unread'));
+        var item = UI.h('button', 'a-notif-item' + (n.read ? '' : ' is-unread'));
         item.appendChild(UI.icon(kindGlyph(n.kind), 18));
         var wrap = UI.h('div', null);
         wrap.appendChild(UI.h('strong', null, n.title));
@@ -404,7 +511,8 @@
         item.appendChild(wrap);
         item.addEventListener('click', function () {
           Store.markRead(n.id);
-          paint();
+          if (n.application_id) location.href = 'application.html?id=' + encodeURIComponent(n.application_id);
+          else paint();
         });
         rows.appendChild(item);
       });
@@ -417,7 +525,7 @@
       body.appendChild(markAll);
       host.appendChild(card);
     }
-    function kindGlyph(k) { return { app: 'apps', status: 'check', note: 'mail', assign: 'user' }[k] || 'bell'; }
+    function kindGlyph(k) { return { app: 'apps', new_application: 'apps', status: 'check', note: 'mail', assign: 'user' }[k] || 'bell'; }
     paint();
   });
 

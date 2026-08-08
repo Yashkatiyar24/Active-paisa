@@ -124,7 +124,11 @@ function backLink() {
 
   function customerCard() {
     var c = app.customer || {};
-    var card = X.card('Customer');
+    var editBtn = UI.h('button', 'a-icon-btn');
+    editBtn.title = 'Edit customer';
+    editBtn.appendChild(UI.icon('edit', 14));
+    editBtn.addEventListener('click', function () { editCustomer(c); });
+    var card = X.card('Customer', Store.can('edit_status') ? editBtn : null);
     var b = X.bodyFor(card);
     var row = UI.h('div', 'a-cust-row');
     row.appendChild(UI.avatar(c.name || '?', 44, uiColor(c.name || '?')));
@@ -158,23 +162,57 @@ function backLink() {
 
   function loanCard() {
     var ten = app.tenureMonths || 1;
-    return statCard('Loan details', [
+    var editBtn = UI.h('button', 'a-icon-btn');
+    editBtn.title = 'Edit loan details';
+    editBtn.appendChild(UI.icon('edit', 14));
+    editBtn.addEventListener('click', function () { editLoan(); });
+    var kv = [
       ['Loan type', app.loanLabel],
       ['Amount requested', UI.rupees(app.amount)],
-      ['Tenure', app.tenureMonths + ' months'],
-      ['Est. monthly payment', UI.rupees(UI.emi(app.amount, ten))],
-      ['Source', app.source],
-      ['Created', UI.fmtDate(app.created)]
-    ]);
+      ['Tenure', (app.tenureMonths || 0) + ' months'],
+      ['Est. monthly payment', UI.rupees(UI.emi(app.amount, ten))]
+    ];
+    if (app.loanId === 'home') {
+      kv.push(['Property city', app.propertyCity || '\u2014']);
+      kv.push(['Property value', UI.rupees(app.propertyValue || 0)]);
+      kv.push(['Purpose', app.purpose || '\u2014']);
+      kv.push(['Monthly obligations', UI.rupees(app.monthlyObligations || 0)]);
+    } else if (app.purpose) {
+      kv.push(['Purpose', app.purpose]);
+    }
+    kv.push(['Source', app.source || '\u2014']);
+    kv.push(['Created', UI.fmtDate(app.created)]);
+    if (app.rejectionReason) kv.push(['Rejection reason', app.rejectionReason]);
+    var card = statCard('Loan details', kv);
+    var head = card.querySelector('.a-card-head');
+    if (head && Store.can('edit_status')) {
+      var wrap = UI.h('div', 'a-card-head-right');
+      wrap.appendChild(editBtn);
+      head.appendChild(wrap);
+    }
+    return card;
   }
 
   function docsCard() {
     var list = app.docs || [];
+    var uploadBtn = null;
+    if (Store.can('edit_status')) {
+      uploadBtn = UI.h('button', 'a-icon-btn');
+      uploadBtn.title = 'Upload document';
+      uploadBtn.appendChild(UI.icon('upload', 14));
+      uploadBtn.addEventListener('click', function () { uploadModal(); });
+    }
     var card = X.card('Documents', X.countPill(list.length, ' document'));
     var b = X.bodyFor(card);
     if (!list.length) {
-      b.appendChild(UI.h('p', 'a-muted', 'No documents uploaded yet.'));
-      return card;
+      b.appendChild(UI.h('p', 'a-muted', 'No documents uploaded yet'));
+      if (uploadBtn) {
+        var up0 = UI.h('button', 'btn btn-ghost btn-sm');
+        up0.appendChild(UI.icon('upload', 14));
+        up0.appendChild(UI.h('span', null, 'Upload document'));
+        up0.addEventListener('click', function () { uploadModal(); });
+        b.appendChild(up0);
+      }
     }
     var rows = UI.h('div', 'a-docs');
     list.forEach(function (d) {
@@ -184,20 +222,223 @@ function backLink() {
       row.appendChild(ic);
       var mid = UI.h('div', 'a-doc-mid');
       mid.appendChild(UI.h('strong', null, d.label || d.name));
-      mid.appendChild(UI.h('span', null, d.name + ' \u00B7 ' + d.size));
+      mid.appendChild(UI.h('span', null, d.name + ' \u00B7 ' + (d.size || '') + ' \u00B7 ' + (d.uploadedBy || '') + ' \u00B7 ' + UI.timeAgo(d.at)));
+      mid.appendChild(UI.chip(d.status === 'verified' ? 'approved' : (d.status === 'rejected' ? 'rejected' : (d.status === 'new' ? 'new' : d.status || 'new'))));
       row.appendChild(mid);
+      var tools = UI.h('div', 'a-doc-tools');
       var dlBtn = UI.h('button', 'a-doc-dl');
       dlBtn.title = 'Download';
       dlBtn.appendChild(UI.icon('download', 16));
       dlBtn.addEventListener('click', function () {
-        UI.download(d.name, app.ref + '\n' + (d.label || d.name) + '\n' + (d.hint || '') + '\n\nPlaceholder document.',
-          'text/plain');
+        Store.downloadDocument(d).catch(function (err) { UI.toast(err.message || 'Download failed.', 'error'); });
       });
-      row.appendChild(dlBtn);
+      tools.appendChild(dlBtn);
+      if (Store.can('edit_status')) {
+        if (d.status !== 'verified') {
+          var vBtn = UI.h('button', 'a-doc-dl');
+          vBtn.title = 'Verify';
+          vBtn.appendChild(UI.icon('check', 16));
+          vBtn.addEventListener('click', function () {
+            Store.updateDocument(d.id, 'verified').then(function (r) {
+              if (!r.ok) { UI.toast(r.error || 'Could not verify.', 'error'); return; }
+              UI.toast('Document verified.', 'success');
+              refresh();
+            });
+          });
+          tools.appendChild(vBtn);
+        }
+        if (d.status !== 'rejected') {
+          var rBtn = UI.h('button', 'a-doc-dl');
+          rBtn.title = 'Reject';
+          rBtn.appendChild(UI.icon('x', 16));
+          rBtn.addEventListener('click', function () {
+            Store.updateDocument(d.id, 'rejected').then(function (r) {
+              if (!r.ok) { UI.toast(r.error || 'Could not reject.', 'error'); return; }
+              UI.toast('Document rejected.', 'success');
+              refresh();
+            });
+          });
+          tools.appendChild(rBtn);
+        }
+      }
+      row.appendChild(tools);
       rows.appendChild(row);
     });
     b.appendChild(rows);
+    if (uploadBtn) {
+      var actions = UI.h('div', 'a-doc-actions');
+      var upBtn = UI.h('button', 'btn btn-ghost btn-sm');
+      upBtn.appendChild(UI.icon('upload', 14));
+      upBtn.appendChild(UI.h('span', null, 'Upload document'));
+      upBtn.addEventListener('click', function () { uploadModal(); });
+      actions.appendChild(upBtn);
+      b.appendChild(actions);
+    }
     return card;
+  }
+
+  function uploadModal() {
+    var m = UI.modal({ title: 'Upload document' });
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf,image/png,image/jpeg';
+    var labelIn = UI.h('input');
+    labelIn.placeholder = 'Label (e.g. Bank statement, PAN card)';
+    m.body.appendChild(X.field('Document file', input));
+    m.body.appendChild(X.field('Label', labelIn));
+    var actions = UI.h('div', 'a-form-actions');
+    var cancel = UI.h('button', 'btn btn-ghost btn-sm', 'Cancel');
+    var save = UI.h('button', 'btn btn-primary btn-sm', 'Upload');
+    cancel.addEventListener('click', m.close);
+    save.addEventListener('click', function () {
+      if (!input.files || !input.files.length) { UI.toast('Choose a file first.', 'error'); return; }
+      var file = input.files[0];
+      if (file.size > 10 * 1024 * 1024) { UI.toast('File too large (max 10 MB).', 'error'); return; }
+      save.disabled = true;
+      save.textContent = 'Uploading\u2026';
+      Store.uploadDocument(app.id, file, labelIn.value.trim() || 'Document').then(function (r) {
+        if (!r.ok) { UI.toast(r.error || 'Upload failed.', 'error'); return; }
+        UI.toast('Document uploaded.', 'success');
+        m.close();
+        refresh();
+      }).catch(function (err) { UI.toast((err && err.message) || 'Upload failed.', 'error'); save.disabled = false; });
+    });
+    actions.appendChild(cancel);
+    actions.appendChild(save);
+    m.body.appendChild(actions);
+  }
+
+  function refresh() {
+    Store.refreshApplication(app.id).then(function (serial) {
+      app = serial;
+      paint();
+    }).catch(function () {});
+  }
+
+  function editCustomer(c) {
+    var EMP = ['', 'Salaried', 'Self-employed', 'Business Owner', 'Freelancer', 'Retired', 'Unemployed'];
+    var m = UI.modal({ title: 'Edit customer' });
+    var f = UI.h('form', 'a-form-grid');
+    f.noValidate = true;
+    var nameI = UI.h('input'); nameI.value = c.name || '';
+    var mobileI = UI.h('input'); mobileI.value = c.phone || '';
+    var emailI = UI.h('input'); emailI.type = 'email'; emailI.value = c.email || '';
+    var panI = UI.h('input'); panI.value = c.pan || '';
+    var dobI = UI.h('input'); dobI.value = c.dob || '';
+    var genderI = UI.h('select');
+    ['', 'Male', 'Female', 'Other'].forEach(function (g) { genderI.appendChild(X.opt(g, g || 'Gender\u2026')); });
+    genderI.value = c.gender || '';
+    var cityI = UI.h('input'); cityI.value = c.city || '';
+    var stateI = UI.h('input'); stateI.value = c.state || '';
+    var pinI = UI.h('input'); pinI.value = c.pincode || '';
+    var addressI = UI.h('textarea'); addressI.rows = 2; addressI.value = c.address || '';
+    var empI = UI.h('select');
+    EMP.forEach(function (e) { empI.appendChild(X.opt(e, e || 'Employment\u2026')); });
+    empI.value = c.employment || '';
+    var companyI = UI.h('input'); companyI.value = c.company || '';
+    var incomeI = UI.h('input'); incomeI.type = 'number'; incomeI.value = c.income || '';
+    var householdI = UI.h('input'); householdI.type = 'number'; householdI.value = c.household || '';
+    var entityI = UI.h('input'); entityI.value = c.entityType || '';
+    var vintageI = UI.h('input'); vintageI.value = c.vintage || '';
+    var gstinI = UI.h('input'); gstinI.value = c.gstin || '';
+    [
+      ['Full name', nameI], ['Mobile', mobileI], ['Email', emailI], ['PAN', panI],
+      ['Date of birth', dobI], ['Gender', genderI], ['City', cityI], ['State', stateI],
+      ['Pincode', pinI], ['Address', addressI], ['Employment', empI], ['Company', companyI],
+      ['Monthly income', incomeI], ['Annual household income', householdI],
+      ['Entity type', entityI], ['Business vintage', vintageI], ['GSTIN', gstinI]
+    ].forEach(function (p) { f.appendChild(X.field(p[0], p[1])); });
+    m.body.appendChild(f);
+    var actions = UI.h('div', 'a-form-actions');
+    var cancel = UI.h('button', 'btn btn-ghost btn-sm', 'Cancel');
+    var save = UI.h('button', 'btn btn-primary btn-sm', 'Save changes');
+    cancel.addEventListener('click', m.close);
+    save.addEventListener('click', function () {
+      var payload = {
+        name: nameI.value.trim() || null,
+        mobile: mobileI.value.trim() || null,
+        email: emailI.value.trim() || null,
+        pan: panI.value.trim() || null,
+        dob: dobI.value.trim() || null,
+        gender: genderI.value || null,
+        city: cityI.value.trim() || null,
+        state: stateI.value.trim() || null,
+        pincode: pinI.value.trim() || null,
+        address: addressI.value.trim() || null,
+        employment: empI.value || null,
+        company: companyI.value.trim() || null,
+        income: incomeI.value ? parseInt(incomeI.value, 10) : null,
+        household: householdI.value ? parseInt(householdI.value, 10) : null,
+        entityType: entityI.value.trim() || null,
+        vintage: vintageI.value.trim() || null,
+        gstin: gstinI.value.trim() || null
+      };
+      save.disabled = true;
+      save.textContent = 'Saving\u2026';
+      Store.updateCustomer(app.id, payload).then(function (r) {
+        if (!r.ok) { UI.toast(r.error || 'Could not save.', 'error'); save.disabled = false; return; }
+        UI.toast('Customer updated.', 'success');
+        m.close();
+        refresh();
+      });
+    });
+    actions.appendChild(cancel);
+    actions.appendChild(save);
+    m.body.appendChild(actions);
+  }
+
+  function editLoan() {
+    var m = UI.modal({ title: 'Edit loan details' });
+    var f = UI.h('form', 'a-form-grid');
+    f.noValidate = true;
+    var typeI = UI.h('select');
+    Store.LOAN_TYPES.forEach(function (lt) { typeI.appendChild(X.opt(lt.id, lt.label)); });
+    typeI.value = app.loanId || 'personal';
+    var amountI = UI.h('input'); amountI.type = 'number'; amountI.value = app.amount || '';
+    var tenureI = UI.h('input'); tenureI.type = 'number'; tenureI.value = app.tenureMonths || '';
+    var purposeI = UI.h('input'); purposeI.value = app.purpose || '';
+    var cityI = null, valI = null, obI = null;
+    f.appendChild(X.field('Loan type', typeI));
+    f.appendChild(X.field('Amount', amountI));
+    f.appendChild(X.field('Tenure (months)', tenureI));
+    f.appendChild(X.field('Purpose', purposeI));
+    if (app.loanId === 'home') {
+      cityI = UI.h('input'); cityI.value = app.propertyCity || '';
+      valI = UI.h('input'); valI.type = 'number'; valI.value = app.propertyValue || '';
+      obI = UI.h('input'); obI.type = 'number'; obI.value = app.monthlyObligations || '';
+      f.appendChild(X.field('Property city', cityI));
+      f.appendChild(X.field('Property value', valI));
+      f.appendChild(X.field('Monthly obligations', obI));
+    }
+    m.body.appendChild(f);
+    var actions = UI.h('div', 'a-form-actions');
+    var cancel = UI.h('button', 'btn btn-ghost btn-sm', 'Cancel');
+    var save = UI.h('button', 'btn btn-primary btn-sm', 'Save changes');
+    cancel.addEventListener('click', m.close);
+    save.addEventListener('click', function () {
+      var payload = {
+        loan_type: typeI.value,
+        amount: amountI.value ? parseInt(amountI.value, 10) : null,
+        tenure_months: tenureI.value ? parseInt(tenureI.value, 10) : null,
+        purpose: purposeI.value.trim() || null
+      };
+      if (cityI && valI && obI) {
+        payload.property_city = cityI.value.trim() || null;
+        payload.property_value = valI.value ? parseInt(valI.value, 10) : null;
+        payload.monthly_obligations = obI.value ? parseInt(obI.value, 10) : null;
+      }
+      save.disabled = true;
+      save.textContent = 'Saving\u2026';
+      Store.updateLoan(app.id, payload).then(function (r) {
+        if (!r.ok) { UI.toast(r.error || 'Could not save.', 'error'); save.disabled = false; return; }
+        UI.toast('Loan updated.', 'success');
+        m.close();
+        refresh();
+      });
+    });
+    actions.appendChild(cancel);
+    actions.appendChild(save);
+    m.body.appendChild(actions);
   }
 
   function statusCard() {

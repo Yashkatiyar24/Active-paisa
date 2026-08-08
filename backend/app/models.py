@@ -61,6 +61,7 @@ class Customer(Base):
     pan: Mapped[str | None] = mapped_column(String(12), nullable=True, index=True)
     pincode: Mapped[str | None] = mapped_column(String(12), nullable=True)
     city: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    state: Mapped[str | None] = mapped_column(String(40), nullable=True)
     address: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # employment profile
@@ -77,6 +78,9 @@ class Customer(Base):
     consent_declaration: Mapped[bool] = mapped_column(Boolean, default=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     applications: Mapped[list["LoanApplication"]] = relationship(
         back_populates="customer", cascade="all, delete-orphan"
@@ -127,6 +131,15 @@ class LoanApplication(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    # home-loan specific fields captured during onboarding
+    property_city: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    property_value: Mapped[BigInteger | None] = mapped_column(BigInteger, nullable=True)
+    purpose: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    monthly_obligations: Mapped[BigInteger | None] = mapped_column(BigInteger, nullable=True)
+
+    rejection_reason: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    disbursed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     customer: Mapped[Customer | None] = relationship(back_populates="applications")
     executive: Mapped[Executive | None] = relationship(back_populates="applications")
 
@@ -137,6 +150,9 @@ class LoanApplication(Base):
         back_populates="application", cascade="all, delete-orphan"
     )
     activity: Mapped[list["ApplicationActivity"]] = relationship(
+        back_populates="application", cascade="all, delete-orphan"
+    )
+    documents: Mapped[list["ApplicationDocument"]] = relationship(
         back_populates="application", cascade="all, delete-orphan"
     )
 
@@ -185,3 +201,58 @@ class ApplicationActivity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     application: Mapped[LoanApplication | None] = relationship(back_populates="activity")
+
+
+class ApplicationDocument(Base):
+    """A real uploaded file attached to an application (PDF/PNG/JPEG)."""
+
+    __tablename__ = "application_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    application_id: Mapped[int] = mapped_column(
+        ForeignKey("loan_applications.id", ondelete="CASCADE"), index=True
+    )
+    label: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str] = mapped_column(String(80), default="application/octet-stream")
+    data: Mapped[bytes] = mapped_column("data", Text)
+    size: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="new")  # new|verified|rejected
+    uploaded_by: Mapped[str] = mapped_column(String(120), default="Admin")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    application: Mapped[LoanApplication] = relationship(back_populates="documents")
+
+
+class Notification(Base):
+    """Bell-feed notifications, persisted so unread/read state survives reloads."""
+
+    __tablename__ = "app_notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    application_id: Mapped[int | None] = mapped_column(
+        ForeignKey("loan_applications.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    kind: Mapped[str] = mapped_column(String(40))  # new_application|status|docs|assign|note
+    title: Mapped[str] = mapped_column(String(160))
+    body: Mapped[str] = mapped_column(String(500))
+    read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    application: Mapped[LoanApplication | None] = relationship()
+
+
+def notify(db, app, kind, title, body):
+    if app is not None and app.id is None:
+        app_id = None
+    else:
+        app_id = app.id if app is not None else None
+    db.add(
+        Notification(
+            application_id=app_id,
+            kind=kind,
+            title=title,
+            body=body[:500],
+            read=False,
+        )
+    )

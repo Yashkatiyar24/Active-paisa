@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import models
 from .config import settings
-from .database import Base, SessionLocal, engine
+from .database import Base, SessionLocal, engine, migrate
 from .routers import admin as admin_router
 from .routers import auth as auth_router
 from .routers import public as public_router
@@ -27,6 +27,7 @@ ADMIN_PASSWORD = "MohammadAnwar@123"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    migrate()
     Base.metadata.create_all(bind=engine)
     _ensure_admin()
     yield

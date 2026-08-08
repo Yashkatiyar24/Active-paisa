@@ -53,7 +53,7 @@ APAdmin.register('applications', (function () {
   }
 
   function reset() {
-    state.q = ''; state.status = ''; state.loan = ''; state.exec = '';
+    state.q = ''; state.status = ''; state.loan = ''; state.exec = ''; state.city = '';
     state.page = 1; state.order = 'date'; state.dir = -1; state.queue = '';
     if (history.replaceState) history.replaceState(null, null, 'applications.html');
     paint();
@@ -72,6 +72,7 @@ APAdmin.register('applications', (function () {
     if (state.status) list = list.filter(function (a) { return a.status === state.status; });
     if (state.loan) list = list.filter(function (a) { return a.loanId === state.loan; });
     if (state.exec) list = list.filter(function (a) { return a.executive === state.exec; });
+    if (state.city) list = list.filter(function (a) { return String(a.customer.city || '').toLowerCase() === String(state.city).toLowerCase(); });
 
     var k = state.order;
     return list.sort(function (a, b) {
@@ -102,6 +103,7 @@ APAdmin.register('applications', (function () {
     bar.appendChild(filterSelect('status'));
     bar.appendChild(filterSelect('loan'));
     bar.appendChild(filterSelect('exec'));
+    bar.appendChild(filterSelect('city'));
 
     var res = UI.h('button', 'a-icon-btn');
     res.title = 'Reset filters';
@@ -144,6 +146,15 @@ APAdmin.register('applications', (function () {
       s.appendChild(X.opt('', 'All owners'));
       X.executives(false).forEach(function (u) { s.appendChild(X.opt(u.name, u.name, state.exec === u.name)); });
       s.addEventListener('change', function () { state.exec = s.value; state.page = 1; paint(); });
+    }
+    if (kind === 'city') {
+      s.appendChild(X.opt('', 'All cities'));
+      var seen = {};
+      Store.listApplications().forEach(function (a) {
+        var c = a.customer.city;
+        if (c && !seen[c]) { seen[c] = 1; s.appendChild(X.opt(c, c, state.city === c)); }
+      });
+      s.addEventListener('change', function () { state.city = s.value; state.page = 1; paint(); });
     }
     return s;
   }
@@ -261,15 +272,20 @@ APAdmin.register('applications', (function () {
   }
   function exportRows(excel) {
     var qs = [];
-    if (state.q) qs.push('search=' + encodeURIComponent(state.q));
-    if (state.status) qs.push('status=' + encodeURIComponent(state.status));
-    if (state.loan) qs.push('loan_type=' + encodeURIComponent(state.loan));
+    var selected = APBulk.get();
+    var selIds = Object.keys(selected).filter(function (k) { return selected[k]; });
+    if (selIds.length) qs.push('ids=' + encodeURIComponent(selIds.join(',')));
+    if (!selIds.length) {
+      if (state.q) qs.push('search=' + encodeURIComponent(state.q));
+      if (state.status) qs.push('status=' + encodeURIComponent(state.status));
+      if (state.loan) qs.push('loan_type=' + encodeURIComponent(state.loan));
+    }
     var url = '/api/v1/export?fmt=' + (excel ? 'xlsx' : 'csv') + (qs.length ? '&' + qs.join('&') : '');
     var s = Store.session();
     if (s && s.token) {
       fetch(url, { headers: { 'Authorization': 'Bearer ' + s.token } })
         .then(function (r) {
-          if (!r.ok) throw new Error('Export failed');
+          if (!r.ok) return r.json().then(function (j) { throw new Error((j && j.detail) || 'Export failed'); });
           return r.blob();
         })
         .then(function (blob) {

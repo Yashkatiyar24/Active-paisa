@@ -846,11 +846,15 @@ var APLoan = (function () {
         var el2 = document.getElementById('f_' + name);
         return !!(el2 && el2.checked);
       };
+      var digits = function (v) {
+        var n = money(v);
+        return n === '' ? 0 : Math.round(parseFloat(n));
+      };
       var payload = {
         loanType: p.id,
         loanLabel: p.name,
-        amount: Number(d.amount) || Number(d.turnover) || 0,
-        tenureMonths: Number(d.tenure) || 0,
+        amount: digits(d.amount) || digits(d.turnover) || 0,
+        tenureMonths: digits(d.tenure) || 0,
         consentTerms: consentBox('declResident') || consentBox('flowConsent'),
         consentPrivacy: consentBox('declResident'),
         consentDeclaration: consentBox('declIndustry'),
@@ -869,13 +873,19 @@ var APLoan = (function () {
           pincode: d.pincode || '',
           gender: d.gender || '',
           employment: d.employment || '',
-          company: d.company || '',
+          company: d.company || d.employer || d.businessName || '',
           income: money(d.income),
           household: money(d.household),
           entityType: d.entityType || '',
           vintage: d.vintage || '',
           gstin: d.gstin || '',
           address: d.addressLine || ''
+        },
+        home: {
+          propertyCity: d.propertyCity || '',
+          propertyValue: digits(d.propertyValue) || 0,
+          purpose: d.purpose || '',
+          obligations: digits(d.obligations) || 0
         }
       };
       return fetch('/api/v1/public/applications', {
