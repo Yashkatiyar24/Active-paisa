@@ -581,6 +581,9 @@ html[data-admin-theme="dark"] .a-chip-danger { background: rgba(220, 38, 38, .16
   .a-notif-actions { display: none; }
   .a-notif-item.is-unread::before { right: 8px; top: 10px; width: 6px; height: 6px; }
 }
+@media (max-width: 1000px) {
+  .a-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 900px) {
   .a-kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .a-chart-grid, .a-lower-grid { grid-template-columns: 1fr; }
