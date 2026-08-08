@@ -10,6 +10,7 @@ var APStore = (function () {
 
   var API = '/api/v1';
   var SESSION_KEY = 'ap_admin_session';
+  var CACHE_KEY = 'ap_admin_cache_v1';
   var READ_KEY = 'ap_admin_read';
   var THEME_KEY = 'ap_admin_theme';
 
@@ -72,6 +73,38 @@ var APStore = (function () {
     notifs: [],
     loaded: false
   };
+
+  /* Restore the in-memory cache from sessionStorage so navigating between
+     admin pages is instant (no re-fetch on every tab switch). Data stays
+     fresh via background refresh, SSE events and filter re-fetch. */
+  (function hydrateCache() {
+    try {
+      var raw = sessionStorage.getItem(CACHE_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (!saved || saved.loaded !== true) return;
+      var s = session();
+      if (saved.userId && s && s.user && String(saved.userId) !== String(s.user.id)) return;
+      cache.apps = saved.apps || [];
+      cache.users = saved.users || [];
+      cache.dash = saved.dash || null;
+      cache.notifs = saved.notifs || [];
+      cache.loaded = true;
+    } catch (e) { /* ignore corrupt cache */ }
+  })();
+
+  function persistCache() {
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+        userId: (currentUser() || {}).id || null,
+        apps: cache.apps,
+        users: cache.users,
+        dash: cache.dash,
+        notifs: cache.notifs,
+        loaded: cache.loaded
+      }));
+    } catch (e) { /* quota or private mode — ignore */ }
+  }
 
   var listeners = [];
   function subscribe(fn) {
@@ -137,6 +170,8 @@ var APStore = (function () {
         user: res.user,
         exp: null
       });
+      sessionStorage.removeItem(CACHE_KEY);
+      cache.apps = []; cache.users = []; cache.dash = null; cache.notifs = []; cache.loaded = false;
       cache.loaded = false;
       return { ok: true };
     }).catch(function (err) {
@@ -147,13 +182,20 @@ var APStore = (function () {
   function logout() {
     saveSession(null);
     cache.apps = []; cache.users = []; cache.dash = null; cache.notifs = []; cache.loaded = false;
+    try { sessionStorage.removeItem(CACHE_KEY); } catch (e) {}
     changed();
   }
 
   /* ---------- data loading ---------- */
+  var boot = null;
   function load() {
     if (!currentUser()) return Promise.reject(new Error('Not signed in'));
-    return Promise.all([
+    if (cache.loaded) {
+      refetchLater();
+      return Promise.resolve(cache);
+    }
+    if (boot) return boot;
+    boot = Promise.all([
       request('GET', '/applications?per_page=500'),
       request('GET', '/executives'),
       request('GET', '/dashboard'),
@@ -164,9 +206,31 @@ var APStore = (function () {
       cache.dash = results[2] || {};
       cache.notifs = results[3] || [];
       cache.loaded = true;
+      persistCache();
       changed();
+      boot = null;
       return cache;
-    });
+    }).catch(function (e) { boot = null; throw e; });
+    return boot;
+  }
+
+  /* Background refresh once after a tick so tab switches are instant but
+     data is still re-synced shortly after load. */
+  var refreshQueued = false;
+  function refetchLater() {
+    if (refreshQueued) return;
+    refreshQueued = true;
+    setTimeout(function () {
+      refreshQueued = false;
+      var had = cache.loaded;
+      cache.loaded = false;
+      load().then(function () {
+        persistCache();
+        changed();
+      }).catch(function () {
+        cache.loaded = had;
+      });
+    }, 1500);
   }
 
   /* ---------- role helpers ---------- */
