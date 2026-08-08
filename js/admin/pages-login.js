@@ -14,7 +14,7 @@ APAdmin.register('login', (function () {
     var left = UI.h('div', 'a-login-art');
     var brand = UI.h('div', 'a-login-brand');
     var logo = document.createElement('img');
-    logo.src = '../assets/brand/logo.png';
+    logo.src = '../assets/brand/og-image.png';
     logo.alt = 'Activ Paisa';
     logo.className = 'a-brand-logo';
     brand.appendChild(logo);
