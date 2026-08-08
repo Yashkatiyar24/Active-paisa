@@ -615,6 +615,8 @@ var APStore = (function () {
     reports: reports, refreshApplication: refreshApplication,
     stats: stats, byMonth: byMonth, byLoanType: byLoanType,
     formatMoney: formatMoney,
-    load, connect: connect, disconnect: disconnect
+    load, connect: connect, disconnect: disconnect,
+    get cacheLoaded() { return cache.loaded; },
+    get cacheApps() { return cache.apps; }
   };
 })();

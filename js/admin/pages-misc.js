@@ -484,48 +484,120 @@
      NOTIFICATIONS
      ====================================================================== */
   APAdmin.register('notifications', function (host) {
+    var state = { refreshing: false };
+
     function paint() {
       host.textContent = '';
       var list = Store.notifications();
       var unread = list.filter(function (n) { return !n.read; }).length;
+
       var head = UI.h('div', 'a-section-head');
       head.appendChild(UI.h('h2', null, 'Notifications'));
-      head.appendChild(X.countPill(unread, ' unread'));
+      var pill = X.countPill(unread, ' unread');
+      pill.classList.add('a-pill-unread');
+      head.appendChild(pill);
+      var refreshBtn = UI.h('button', 'a-icon-btn a-refresh-btn', { title: 'Refresh' });
+      refreshBtn.appendChild(UI.icon('refresh', 17));
+      refreshBtn.addEventListener('click', function () { refresh(); });
+      head.appendChild(refreshBtn);
       host.appendChild(head);
 
       var card = X.card('All notifications');
       var body = X.bodyFor(card);
+
       if (!list.length) {
-        body.appendChild(UI.emptyState('bell', 'Nothing yet', 'Alerts for new applications and status changes appear here.'));
+        body.appendChild(emptyStateWithRefresh());
         host.appendChild(card);
         return;
       }
+
       var rows = UI.h('div', 'a-notif-list');
       list.forEach(function (n) {
-        var item = UI.h('button', 'a-notif-item' + (n.read ? '' : ' is-unread'));
-        item.appendChild(UI.icon(kindGlyph(n.kind), 18));
-        var wrap = UI.h('div', null);
-        wrap.appendChild(UI.h('strong', null, n.title));
-        wrap.appendChild(UI.h('p', null, n.body));
-        wrap.appendChild(UI.h('span', 'a-notif-at', UI.timeAgo(n.at)));
-        item.appendChild(wrap);
-        item.addEventListener('click', function () {
-          Store.markRead(n.id);
-          if (n.application_id) location.href = 'application.html?id=' + encodeURIComponent(n.application_id);
-          else paint();
-        });
-        rows.appendChild(item);
+        rows.appendChild(notificationCard(n));
       });
       body.appendChild(rows);
-      var markAll = UI.h('button', 'btn btn-ghost btn-sm', 'Mark all read');
-      markAll.addEventListener('click', function () {
-        Store.markAllRead();
-        paint();
-      });
-      body.appendChild(markAll);
+
+      if (unread) {
+        var markAll = UI.h('button', 'btn btn-ghost btn-sm a-mark-all-btn', 'Mark all read');
+        markAll.addEventListener('click', function () {
+          Store.markAllRead();
+          paint();
+        });
+        body.appendChild(markAll);
+      }
       host.appendChild(card);
     }
+
+    function refresh() {
+      if (state.refreshing) return;
+      state.refreshing = true;
+      var refreshBtn = host.querySelector('.a-refresh-btn');
+      if (refreshBtn) refreshBtn.classList.add('spinning');
+      Store.load().then(function () { paint(); }).catch(function () {}).finally(function () {
+        state.refreshing = false;
+        if (refreshBtn) refreshBtn.classList.remove('spinning');
+      });
+    }
+
+    function emptyStateWithRefresh() {
+      var wrap = UI.h('div', 'a-empty a-empty-centered');
+      wrap.appendChild(UI.h('span', 'a-empty-icon', '')).appendChild(UI.icon('bell', 48));
+      wrap.appendChild(UI.h('p', 'a-empty-title', 'No notifications yet'));
+      wrap.appendChild(UI.h('p', 'a-empty-sub', 'Alerts for new applications, status changes, and team activity will appear here.'));
+      var btn = UI.h('button', 'btn btn-primary btn-sm', 'Refresh');
+      btn.appendChild(UI.icon('refresh', 15));
+      btn.addEventListener('click', function () { refresh(); });
+      wrap.appendChild(btn);
+      return wrap;
+    }
+
+    function notificationCard(n) {
+      var item = UI.h('button', 'a-notif-item' + (n.read ? '' : ' is-unread'));
+      item.dataset.appId = n.application_id || '';
+
+      var iconWrap = UI.h('div', 'a-notif-icon');
+      iconWrap.appendChild(UI.icon(kindGlyph(n.kind), 20));
+      item.appendChild(iconWrap);
+
+      var content = UI.h('div', 'a-notif-content');
+      var header = UI.h('div', 'a-notif-header');
+      header.appendChild(UI.h('strong', null, n.title));
+      header.appendChild(UI.h('span', 'a-notif-at', UI.timeAgo(n.at)));
+      content.appendChild(header);
+      content.appendChild(UI.h('p', 'a-notif-body', n.body));
+      item.appendChild(content);
+
+      var actions = UI.h('div', 'a-notif-actions');
+      if (!n.read) {
+        var markRead = UI.h('button', 'a-icon-btn a-notif-markread', { title: 'Mark as read', 'aria-label': 'Mark as read' });
+        markRead.appendChild(UI.icon('check', 15));
+        markRead.addEventListener('click', function (e) {
+          e.stopPropagation();
+          Store.markRead(n.id);
+          paint();
+        });
+        actions.appendChild(markRead);
+      }
+      if (n.application_id) {
+        var open = UI.h('button', 'a-icon-btn a-notif-open', { title: 'Open application', 'aria-label': 'Open application' });
+        open.appendChild(UI.icon('chevronRight', 15));
+        open.addEventListener('click', function (e) {
+          e.stopPropagation();
+          location.href = 'application.html?id=' + encodeURIComponent(n.application_id);
+        });
+        actions.appendChild(open);
+      }
+      item.appendChild(actions);
+
+      item.addEventListener('click', function () {
+        if (n.application_id) location.href = 'application.html?id=' + encodeURIComponent(n.application_id);
+      });
+
+      return item;
+    }
+
     function kindGlyph(k) { return { app: 'apps', new_application: 'apps', status: 'check', note: 'mail', assign: 'user' }[k] || 'bell'; }
+
     paint();
   });
 

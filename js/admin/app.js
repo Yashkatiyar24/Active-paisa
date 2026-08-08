@@ -79,32 +79,106 @@ var APAdmin = (function () {
       return;
     }
 
-    showLoading();
-    Store.load().then(function () {
-      renderShell(page);
-      var host = document.querySelector('.a-content') || document.getElementById('root');
-      if (pages[page]) {
-        try { pages[page](host); } catch (e) { console.error('Page failed:', page, e); }
-      }
-      Store.connect();
-    }).catch(function (e) {
-      if (e === 'Not signed in') { location.replace('login.html'); return; }
-      var host = document.querySelector('.a-content') || document.getElementById('root');
-      renderShell(page);
-      if (host) {
-        host.appendChild(UI.emptyState('apps', 'Could not load data',
-          String((e && e.message) || e), UI.h('button', 'btn btn-ghost btn-sm', 'Retry')));
+    /* Restore scroll position for this page */
+    var scrollKey = 'ap_admin_scroll_' + page;
+    var savedScroll = sessionStorage.getItem(scrollKey);
+    if (savedScroll) {
+      try { var s = JSON.parse(savedScroll); if (s.page === page) savedScroll = s.y; } catch (e) {}
+    }
+
+    /* Render shell + skeleton immediately, then hydrate */
+    renderShellWithSkeleton(page);
+
+    /* Hydrate content from cache instantly, then background refresh */
+    hydratePage(page, savedScroll);
+
+    /* Listen for beforeunload to save scroll */
+    window.addEventListener('beforeunload', function () {
+      var content = document.querySelector('.a-content');
+      if (content) {
+        sessionStorage.setItem(scrollKey, JSON.stringify({ page: page, y: content.scrollTop }));
       }
     });
   }
 
-  function showLoading() {
+  function renderShellWithSkeleton(page) {
     var root = document.getElementById('root');
     if (!root) return;
     root.textContent = '';
-    var wrap = UI.h('div', 'a-shell a-loading');
-    wrap.appendChild(UI.h('p', null, 'Loading\u2026'));
-    root.appendChild(wrap);
+
+    var layout = UI.h('div', 'a-shell');
+    layout.appendChild(sidebar(page));
+    layout.appendChild(main(page));
+    root.appendChild(layout);
+
+    /* Show skeleton in content area while hydrating */
+    var content = document.querySelector('.a-content');
+    if (content) {
+      content.innerHTML = '';
+      content.appendChild(pageSkeleton());
+      content.classList.add('a-content-fade-in');
+    }
+  }
+
+  function pageSkeleton() {
+    var wrap = UI.h('div', 'a-skeleton-wrap');
+    wrap.appendChild(skeletonRow('a-skeleton-title'));
+    wrap.appendChild(skeletonRow('a-skeleton-card'));
+    wrap.appendChild(skeletonRow('a-skeleton-card'));
+    wrap.appendChild(skeletonRow('a-skeleton-card'));
+    return wrap;
+  }
+
+  function skeletonRow(className) {
+    var row = UI.h('div', className);
+    row.style.animation = 'skeleton-pulse 1.2s ease-in-out infinite';
+    return row;
+  }
+
+  function hydratePage(page, savedScroll) {
+    var host = document.querySelector('.a-content') || document.getElementById('root');
+    if (!host) return;
+
+    /* If we have cached data, render immediately */
+    if (Store.cacheLoaded && Store.cacheApps && Store.cacheApps.length) {
+      renderPageContent(page, host, savedScroll);
+      Store.load().then(function () {
+        Store.connect();
+      }).catch(function () {});
+      return;
+    }
+
+    /* Otherwise load and render */
+    showLoadingInContent(host);
+    Store.load().then(function () {
+      renderPageContent(page, host, savedScroll);
+      Store.connect();
+    }).catch(function (e) {
+      if (e === 'Not signed in') { location.replace('login.html'); return; }
+      host.innerHTML = '';
+      host.appendChild(UI.emptyState('apps', 'Could not load data',
+        String((e && e.message) || e), UI.h('button', 'btn btn-ghost btn-sm', 'Retry')));
+    });
+  }
+
+  function renderPageContent(page, host, savedScroll) {
+    host.innerHTML = '';
+    if (pages[page]) {
+      try { pages[page](host); } catch (e) { console.error('Page failed:', page, e); }
+    }
+    host.classList.add('a-content-fade-in');
+
+    /* Restore scroll position after paint */
+    if (savedScroll) {
+      requestAnimationFrame(function () {
+        host.scrollTop = parseInt(savedScroll, 10) || 0;
+      });
+    }
+  }
+
+  function showLoadingInContent(host) {
+    host.innerHTML = '';
+    host.appendChild(pageSkeleton());
   }
 
   /* ---------- shell ---------- */
